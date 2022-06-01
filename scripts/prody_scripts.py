@@ -8,26 +8,31 @@ import os
 import matplotlib
 import matplotlib.pyplot as plt
 import argparse
-from pathlib import Path
-
-# from os.path import exists
 
 
 def sample_load_pdb(pdb_id):  # TODO: Change name
     pdb_id = pdb_id.upper()
-    # TODO: Check if file exists
 
     if pdb_id not in proteins:
         protein = parsePDB(pdb_id)
         proteins[pdb_id] = protein.protein
-    # TODO: Save PDB somewhere else
-    # TODO: load all types of files that if exist (_anm, _anm_ext, etc)
+
+    # TODO: load all types of files that exist (ag, _anm, _ca.anm, _ext.nma) (anything else?)
+    if os.path.exists(pdb_id + '.ag.npz'):
+        proteins[pdb_id] = loadAtoms(pdb_id+'.ag.npz')
+
+    if os.path.exists(pdb_id+'_ca.anm.npz'):
+        proteins[pdb_id+'_anm'] = loadModel(pdb_id+'_ca.anm.npz')
+
+    if os.path.exists(pdb_id+'_ext.nma.npz'):
+        proteins[pdb_id+'_anm_ext'] = loadModel(pdb_id+'_ext.nma.npz')
 
 
 def show_protein(pdb_id):
     pdb_id = pdb_id.upper()
     prody.showProtein(proteins[pdb_id])
     legend()
+    plt.show()
 
 
 def anm_calc_modes(pdb_id, n_modes=20, zeros=False, turbo=True):  # in tutorial they used 3 n_modes (default: 20)
@@ -48,6 +53,8 @@ def anm_calc_modes(pdb_id, n_modes=20, zeros=False, turbo=True):  # in tutorial 
     """
 
     pdb_id = pdb_id.upper()
+    # TODO: Check if needed objects exist in proteins[]
+
     protein_ca = proteins[pdb_id].ca
 
     # instantiate an ANM object
@@ -71,6 +78,8 @@ def anm_calc_modes(pdb_id, n_modes=20, zeros=False, turbo=True):  # in tutorial 
     # save Model
     saveModel(protein_anm, pdb_id+'_ca')
 
+    writeNMD(pdb_id+'_anm.nmd', proteins[pdb_id+'_anm'], proteins[pdb_id].ca)
+
 
 def anm_extend_model(pdb_id, norm=False):
     """
@@ -85,6 +94,8 @@ def anm_extend_model(pdb_id, norm=False):
     :param norm: If norm is True, extended modes are normalized.
     """
     pdb_id = pdb_id.upper()
+
+    # TODO: Check if needed objects exist in proteins[]
     protein_anm = proteins[pdb_id + '_anm']
     protein_ca = proteins[pdb_id].ca
     protein = proteins[pdb_id]
@@ -109,14 +120,21 @@ def sample_conformations(pdb_id, n_confs=1000, rmsd=1.0):
     """
     pdb_id = pdb_id.upper()
 
+    # TODO: Check if needed objects exist in proteins[]
     modes = proteins[pdb_id+'_anm_ext']
     atoms = proteins[pdb_id].protein
-    # atoms = proteins[pdb_id]
-    return sampleModes(modes, atoms, n_confs, rmsd)
+
+    returned_ens = sampleModes(modes, atoms, n_confs, rmsd)
+
+    writeDCD(pdb_id+'_all.dcd', returned_ens)
+
+    return returned_ens
 
 
 def write_conformations(pdb_id, ensembl):
     pdb_id = pdb_id.upper()
+
+    # TODO: Check if needed objects exist in proteins[]
     protein = proteins[pdb_id]
 
     protein.addCoordset(ensembl.getCoordsets())
@@ -126,11 +144,39 @@ def write_conformations(pdb_id, ensembl):
     protein.ca.setBetas(1)
 
     for i in range(1, protein.numCoordsets()):  # skipping 0th coordinate set
-        fn = os.path.join('../p38_ensemble', 'p38_' + str(i) + '.pdb')  # TODO: change path
+        new_dir_path = os.path.join(dir_path, pdb_id.lower()+'_ensemble')
+
+        if not os.path.exists(new_dir_path):  # if needed - create directory for the ensemble
+            os.makedirs(new_dir_path)
+
+        fn = os.path.join(new_dir_path, pdb_id.lower() + '_' + str(i) + '.pdb')
         writePDB(fn, protein, csets=i)
+
+
+def optimize_conformations(pdb_id):
+    #  requires: NAMD2 or NAMD3
+    if prody.utilities.which('namd3'):
+        print("Using NAMD3")
+        namd = prody.utilities.which('namd3')
+
+    elif prody.utilities.which('namd2'):
+        print("Using NAMD2")
+        namd = prody.utilities.which('namd2')
+
+    else:
+        print("Couldn't find NAMD2 or NAMD3. Please install before continuing. If it's on your system, make sure  to "
+              "add it to PATH")
+        return None
+
+    # TODO: Find location of CHARMMPAR file
+    # TODO: Do optimization
+        ## TODO: Create directory
 
 #############################################################################################
 
+
+# global variables
+dir_path = os.getcwd()
 
 parser = argparse.ArgumentParser(description='')  # TODO: Write description
 parser.add_argument('filename', type=str, help='name of PDB file')
@@ -145,21 +191,18 @@ sample_load_pdb(filename)
 # print(proteins)
 # print(proteins.keys())
 show_protein(filename)
-plt.show()
+
 anm_calc_modes(filename)
 print(proteins)
 print(proteins[filename.upper()+'_anm'])
 showSqFlucts(proteins[filename.upper()+'_anm'])  # (also visible in VMD)
 plt.show()
-writeNMD(filename.upper()+'_anm.nmd', proteins[filename.upper()+'_anm'], proteins[filename.upper()].ca)
-# viewNMDinVMD('1P38_anm.nmd')
+# viewNMDinVMD(filename.upper()+'_anm.nmd')
 
 anm_extend_model(filename)
 ens = sample_conformations(filename, 100)
 
-
-# writeDCD('p38all.dcd', ens)
-
+# Begin Analysis
 rmsd = ens.getRMSDs()
 hist(rmsd, density=False)
 xlabel('RMSD')
@@ -168,13 +211,14 @@ plt.show()
 showProjection(ens, proteins[filename.upper()+'_anm_ext'][:3], rmsd=True)
 plt.show()
 
-proteins[filename.upper()] = loadAtoms(filename.upper()+'.ag.npz')
-proteins[filename.upper()+'_anm'] = loadModel(filename.upper()+'_ca.anm.npz')
-proteins[filename.upper()+'_anm_ext'] = loadModel(filename.upper()+'_ext.nma.npz')
-
 print(proteins[filename.upper()].numAtoms())
 print(ens.numAtoms())
 
-write_conformations(filename, ens)
+# End Analysis
 
-# vmd -m p38_ensemble/*pdb
+sample_load_pdb(filename)
+write_conformations(filename, ens)
+# vmd -m 1p38_ensemble/*pdb
+
+
+optimize_conformations(filename)

@@ -14,21 +14,8 @@ TODO: Dokumentacja
 # Prody Notes
     TODO: Zrobić osobną klasę dla generowania/programu
 
-    # Zrobić notatki o:
-    # Hessian Matrix
-    # Ile 'ANM Modes' jest potrzebnych? (normal modes)
-
-    '''
-    The "number of modes" parameter determines how many dominant normal modes will be calculated.
-    More modes give more complete picture on the dynamics of the system in the cost of computational time.
-    20 modes are usually sufficient to describe the important motions of small-medium systems
-    as the slow modes are usually the functional ones.'''
-
-    # sampleModes()!!! <- to generuje konformacje
-
-    # NAMD!!!
+    # NAMD
     # TODO: Jak otrzymać plik min.conf / .psf
     # Chyba będzie trzeba napisać generatory tych plików
-    # CUDA - znajdź NAMD bez CUDA / chociaż wygląda na to że działa
 
 =========================================================================================================
