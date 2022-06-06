@@ -3,19 +3,23 @@
 
 from prody import *
 from pylab import *
+from numpy import *
 
 import os
+import glob
 import matplotlib
 import matplotlib.pyplot as plt
 import argparse
-import gzip
+
+proteins = {}
+dir_path = os.getcwd()
 
 
 def load_pdb(pdb_id):  # TODO: Change name
     pdb_id = pdb_id.lower()
 
     if pdb_id not in proteins:
-        tmp = fetchPDB(pdb_id)
+        fetchPDB(pdb_id)
 
         # protein = parsePDB(pdb_id)  # , compressed=False
         os.system(f"gunzip {pdb_id}.pdb.gz")
@@ -27,8 +31,7 @@ def load_pdb(pdb_id):  # TODO: Change name
         proteins[pdb_id] = protein.protein
         print("PROTEIN ATOMS: ", proteins[pdb_id].numAtoms())
 
-
-    # TODO: load all types of files that exist (ag, _anm, _ca.anm, _ext.nma) (anything else?)
+    # Load all types of files that exist (ag, _anm, _ca.anm, _ext.nma)
     if os.path.exists(pdb_id + '.ag.npz'):
         proteins[pdb_id] = loadAtoms(pdb_id + '.ag.npz')
 
@@ -164,9 +167,8 @@ def write_conformations(pdb_id, ensembl):
         writePDB(fn, protein, csets=i)
 
 
-def make_namd_conf(pdb_id, timestep=1.0, cutoff=10.0, temperature=0):
+def make_namd_conf(pdb_id, timestep=1.0, cutoff=10.0, temperature=0, n_steps=20):
     # TODO: Description
-    # TODO: Are these params ok?
     pdb_id = pdb_id.lower()
 
     # Check if file exists
@@ -200,7 +202,7 @@ consref         {{pdb}}
 conskfile       {{pdb}}
 conskcol        B
 constraintScaling  1.0
-minimize        20
+minimize        {n_steps}
     ''')
 
     conf_file.close()
@@ -241,20 +243,20 @@ exit'''
 
     par = os.path.join(lines[0].strip(), 'par_all27_prot_lipid_na.inp')
     top = os.path.join(lines[1].strip(), 'top_all27_prot_lipid_na.inp')
-
+    # if os.path.isfile(os.path.join(dir_path,pdb_id+'.psf')):
+    #
     # Generate PSF file
     tcl_cmd = f'''package require psfgen
 mol load pdb {pdb_id}.pdb	 
 topology {top}	 
 pdbalias residue HIS HSE	 
 pdbalias atom ILE CD1 CD	 
-segment U {{pdb {pdb_id}.pdb}}	 
-coordpdb {pdb_id}.pdb U	 
+segment PPP {{pdb {pdb_id}.pdb}}	 
+coordpdb {pdb_id}.pdb PPP	 
 guesscoord	 
 writepdb {pdb_id}.pdb	 
 writepsf {pdb_id}.psf
 exit'''
-
 
     with open('generate_psf.tcl', 'w') as inp:
         inp.write(tcl_cmd)
@@ -263,7 +265,7 @@ exit'''
     return 0
 
 
-def optimize_conformations(pdb_id, charmm_dir='', n_cpu=3):
+def optimize_conformations(pdb_id, n_cpu=3, charmm_dir=''):
     import shutil
     pdb_id = pdb_id.lower()
     # TODO: Description
@@ -277,7 +279,7 @@ def optimize_conformations(pdb_id, charmm_dir='', n_cpu=3):
     elif prody.utilities.which('namd2'):
         print("Using NAMD2")
         namd = prody.utilities.which('namd2')
-        namd_ver = 'namd3'
+        namd_ver = 'namd2'
     else:
         print("Couldn't find NAMD2 or NAMD3. Please install before continuing. If it's on your system, make sure  to "
               "add it to PATH")
@@ -297,7 +299,7 @@ def optimize_conformations(pdb_id, charmm_dir='', n_cpu=3):
         print("Making folder for optimization files...")
         os.mkdir(new_dir_path)
 
-    shutil.copyfile(pdb_id+'.psf', pdb_id+'_optimize/'+pdb_id+'.psf')
+    shutil.copyfile(pdb_id + '.psf', pdb_id + '_optimize/' + pdb_id + '.psf')
     # # Generate .psf
     # generate_psf(pdb_id, top)
 
@@ -314,8 +316,9 @@ def optimize_conformations(pdb_id, charmm_dir='', n_cpu=3):
         out.write(conf.format(out=fn, pdb=pdb, par=par))
         out.close()
 
+    print("Creating folder for optimized data")
     # Optimize conformations
-    os.chdir(pdb_id+'_optimize')
+    os.chdir(pdb_id + '_optimize')
 
     cmds = []  # commands to execute
     for conf in glob.glob('*.conf'):
@@ -324,57 +327,154 @@ def optimize_conformations(pdb_id, charmm_dir='', n_cpu=3):
 
     from multiprocessing import Pool
     pool = Pool(n_cpu)  # number of CPUs to use
+
+    print(f"Using {n_cpu} CPUs")
+    print("Running NAMD")
     signals = pool.map(os.system, cmds)
 
     if set(signals) == {0}:
         print("NAMD executed correctly")
 
+    # go back to previous dir
     os.chdir('..')
+
+
+# TODO: Work on analysis
+def analyze(pdb_id):
+    pdb_id = pdb_id.lower()
+
+    initial = AtomGroup(pdb_id + ' initial')
+    refined = AtomGroup(pdb_id + ' refined')
+    print('Parsing ensembles...')
+    for pdb in glob.glob(pdb_id + '_ensemble/*pdb'):
+        # print(pdb)
+        fn = os.path.splitext(os.path.split(pdb)[1])[0]
+        print(fn)
+
+        # rename .coor files to .pdb
+        old_name = os.path.join(pdb_id + '_optimize', fn + '.coor')
+        new_name = os.path.join(pdb_id + '_optimize', fn + '.pdb')
+
+        if os.path.isfile(old_name):
+            os.rename(old_name, new_name)
+            opt = new_name
+        elif os.path.isfile(new_name):
+            opt = new_name
+        else:
+            continue
+
+        parsePDB(pdb, ag=initial)
+        parsePDB(opt, ag=refined)
+
+        # rename back .pdb files to .coor
+        old_name = os.path.join(pdb_id + '_optimize', fn + '.coor')
+        new_name = os.path.join(pdb_id + '_optimize', fn + '.pdb')
+
+        if os.path.isfile(new_name):
+            os.rename(new_name, old_name)
+
+    rmsd_ca = []
+    rmsd_all = []
+    initial_ca = initial.ca
+    refined_ca = refined.ca
+    for i in range(initial.numCoordsets()):
+        initial.setACSIndex(i)
+        refined.setACSIndex(i)
+        initial_ca.setACSIndex(i)
+        refined_ca.setACSIndex(i)
+        rmsd_ca.append(calcRMSD(initial_ca, refined_ca))
+        rmsd_all.append(calcRMSD(initial, refined))
+
+    plot(rmsd_all, label='all')
+    plot(rmsd_ca, label='ca')
+    xlabel('Conformation index')
+    ylabel('RMSD')
+    legend()
+    plt.show()
+
+
+def analyze_traj(pdb_id):
+    pdb_id = pdb_id.lower()
+    structure = parsePDB(pdb_id)
+    traj = Trajectory(pdb_id + '_all.dcd')
+
+    # Link trajectory to atoms
+    traj.link(structure)
+    traj.setCoords(structure)
+
+    ensemble = parseDCD(pdb_id + '_all.dcd')
+    ensemble.setAtoms(structure)
+    ensemble.setCoords(structure)
+
+    ensemble.superpose()
+
+    rmsd = ensemble.getRMSDs()
+    print(f'RMSD: {rmsd[:10]}')
+
+    rmsf = ensemble.getRMSFs()
+    print(f'RMSF: {rmsf}')
+
+    # Radius of gyration
+    protein = structure.select('noh and protein')
+    rgyr = zeros(traj.numFrames())
+
+    # TODO: Psi angle
+
+    # Perform calculations
+    for i, frame in enumerate(traj):
+        rgyr[i] = calcGyradius(protein)
+
+    plot(rgyr)
+    xlabel('Frame index')
+    ylabel('Radius of gyration (A)')
+    plt.show()
+
 
 #############################################################################################
 # global variables
-dir_path = os.getcwd()
 
-parser = argparse.ArgumentParser(description='')  # TODO: Write description
-parser.add_argument('filename', type=str, help='name of PDB file')
-
-args = parser.parse_args()
-
-filename = args.filename
-proteins = {}
 
 # TESTING SITE ##########################################################################
-load_pdb(filename)
 
-show_protein(filename)
 
-anm_calc_modes(filename)
-# print(proteins)
-# print(proteins[filename.lower()+'_anm'])
-showSqFlucts(proteins[filename.lower()+'_anm'])  # (also visible in VMD)
-plt.show()
-# viewNMDinVMD(filename.lower()+'_anm.nmd')
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='')  # TODO: Write description
+    parser.add_argument('filename', type=str, help='name of PDB file')
+    args = parser.parse_args()
+    filename = args.filename.lower()
 
-anm_extend_model(filename)
-ens = sample_conformations(filename, 40)
+    load_pdb(filename)
 
-print(ens.numAtoms())
-# Begin Analysis
-rmsd = ens.getRMSDs()
-hist(rmsd, density=False)
-xlabel('RMSD')
-plt.show()
+    # show_protein(filename)
 
-showProjection(ens, proteins[filename.lower()+'_anm_ext'][:3], rmsd=True)
-plt.show()
+    anm_calc_modes(filename, 3)  # def: 20
 
-# (proteins[filename.lower()].numAtoms())
-# print(ens.numAtoms())
+    # showSqFlucts(proteins[filename.lower()+'_anm'])  # (also visible in VMD)
+    # plt.show()
+    # viewNMDinVMD(filename.lower()+'_anm.nmd')
 
-# End Analysis
-load_pdb(filename)
-write_conformations(filename, ens)
-# os.system(vmd -m 1p38_ensemble/*pdb)
+    anm_extend_model(filename)
+    ens = sample_conformations(filename, 100)
 
-make_namd_conf(filename)
-optimize_conformations(filename)
+    print(ens.numAtoms())
+    # Begin Analysis
+    # rmsd = ens.getRMSDs()
+    # hist(rmsd, density=False)
+    # xlabel('RMSD')
+    # plt.show()
+    #
+    # showProjection(ens, proteins[filename.lower()+'_anm_ext'][:3], rmsd=True)
+    # plt.show()
+
+    # (proteins[filename.lower()].numAtoms())
+    # print(ens.numAtoms())
+
+    # End Analysis
+    load_pdb(filename)
+    write_conformations(filename, ens)
+    # os.system("vmd -m 1p38_ensemble/*pdb")
+
+    make_namd_conf(filename)
+    optimize_conformations(filename)
+    analyze(filename)
+    analyze_traj(filename)

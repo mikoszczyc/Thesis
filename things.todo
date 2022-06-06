@@ -13,15 +13,24 @@ TODO: Dokumentacja
 
 # Prody Notes
 
-    # NAMD
-    # Jak otrzymać plik min.conf / .psf
-    http://www.ks.uiuc.edu/Training/Tutorials/
+    # NAMD - Generate files:
         .conf
         https://www.ks.uiuc.edu/Training/Tutorials/namd/namd-tutorial-unix-html/node26.html
-
         .psf
         https://www.ks.uiuc.edu/Training/Tutorials/namd/namd-tutorial-html/node6.html
 
     # TODO: Error (unknown residue type TPO (5tj3.pdb)) while generating psf
     (works for 1p38, 2ERM)
+
+    # TODO: Trajectory Analysis
+    http://prody.csb.pitt.edu/tutorials/trajectory_analysis/trajectory.html
+    # calcRMSF
+
+
+    # MEASUREMENT TOOLS
+    http://prody.csb.pitt.edu/manual/reference/measure/index.html#measure
+
 =========================================================================================================
+
+# PyRosetta
+    # Files load uppercase
