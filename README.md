@@ -13,7 +13,6 @@ The following packages/tools are needed:
 - ProDy: https://github.com/prody/ProDy 
 - NAMD: https://www.ks.uiuc.edu/Research/namd/
 - VMD: https://www.ks.uiuc.edu/Research/vmd/
-- PyRosetta: https://www.pyrosetta.org/
 - PyTraj: https://amber-md.github.io/pytraj/latest/index.html
 ## Documentation
 

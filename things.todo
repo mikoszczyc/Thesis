@@ -1,26 +1,12 @@
 TODO: Sprawdzanie czy wymagane paczki są dostępne
 
-TODO: Generowanie zbioru pyRosetta
 TODO: Generowanie zbioru pytraj
-
-TODO: Wspólny interfejs dla ProDy i pyrosetta do generowania
-
-TODO: pyRosetta POSE to pyTraj converter
 
 TODO: Sprawdzanie jakości generowanych zbiorów
 TODO: Wizualizacja
 TODO: Dokumentacja
 
 # Prody Notes
-
-    # NAMD - Generate files:
-        .conf
-        https://www.ks.uiuc.edu/Training/Tutorials/namd/namd-tutorial-unix-html/node26.html
-        .psf
-        https://www.ks.uiuc.edu/Training/Tutorials/namd/namd-tutorial-html/node6.html
-
-    # TODO: Error (unknown residue type TPO (5tj3.pdb)) while generating psf
-    (works for 1p38, 2ERM)
 
     # TODO: Trajectory Analysis
     http://prody.csb.pitt.edu/tutorials/trajectory_analysis/trajectory.html
@@ -30,7 +16,4 @@ TODO: Dokumentacja
     # MEASUREMENT TOOLS
     http://prody.csb.pitt.edu/manual/reference/measure/index.html#measure
 
-=========================================================================================================
 
-# PyRosetta
-    # Files load uppercase

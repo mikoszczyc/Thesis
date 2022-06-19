@@ -15,21 +15,21 @@ proteins = {}
 dir_path = os.getcwd()
 
 
-def load_pdb(pdb_id):  # TODO: Change name
+def load_pdb(pdb_id):
     pdb_id = pdb_id.lower()
 
     if pdb_id not in proteins:
         fetchPDB(pdb_id)
 
         # protein = parsePDB(pdb_id)  # , compressed=False
-        os.system(f"gunzip {pdb_id}.pdb.gz")
+        os.system(f'gunzip {pdb_id}.pdb.gz')
         remove_waters(pdb_id)
         generate_psf(filename)
         protein = parsePDB(pdb_id)  # , compressed=False
 
-        print("ATOMS: ", protein.numAtoms())
+        print('ATOMS: ', protein.numAtoms())
         proteins[pdb_id] = protein.protein
-        print("PROTEIN ATOMS: ", proteins[pdb_id].numAtoms())
+        print('PROTEIN ATOMS: ', proteins[pdb_id].numAtoms())
 
     # Load all types of files that exist (ag, _anm, _ca.anm, _ext.nma)
     if os.path.exists(pdb_id + '.ag.npz'):
@@ -48,9 +48,34 @@ def show_protein(pdb_id):
     legend()
     plt.show()
 
+def calc_modes(pdb_id, enm='anm', sele='calpha', n_modes=20, zeros=False, turbo=True, cutoff=10.0, gamma=1.0):
+    '''
+    Perform Elastic Network Model analysis calculations and retrieve normal mode data.
+    By default: Creates ANM instance that stores Hessian matrix and normal mode data.
+    While using GNM: Creates GNM instance that stores Kirchhoff matrix and normal mode data.
+    Normal mode data describes intrinsic dynamics of the protein structure.
+
+    :param pdb_id: The four-letter accession code of the desired PDB file.
+    :type pdb_id: string
+    :param sele: Selection name.
+    :type sele: string
+    :param n_modes: Number of non-zero eigenvalues/vectors to calculate. Choose None or 'all' to calculate all modes.
+    :type n_modes: int or None, default is 20
+    :param zeros: If `True`, modes with zero eigenvalues will be kept.
+    :type zeros: bool
+    :param turbo: Use faster but more memory intensive calculation mode.
+    :type turbo: bool
+    :return: ANM / GNM object
+    '''
+
+    pdb_id = pdb_id.lower()
+    load_pdb(pdb_id)
+
+def extend_model(pdb_id, enm = 'anm'):
+    pass
 
 def anm_calc_modes(pdb_id, n_modes=20, zeros=False, turbo=True):  # in tutorial, they used 3 n_modes (default: 20)
-    """
+    '''
     Perform ANM (Anisotropic Network Model) calculations and retrieve normal mode data.
     Creates ANM instance that stores Hessian matrix and normal mode data.
     Normal mode data describes intrinsic dynamics of the protein structure.
@@ -64,7 +89,7 @@ def anm_calc_modes(pdb_id, n_modes=20, zeros=False, turbo=True):  # in tutorial,
     :param turbo: Use faster but more memory intensive calculation mode.
     :type turbo: bool
     :return: ANM object
-    """
+    '''
 
     pdb_id = pdb_id.lower()
     # TODO: Check if needed objects exist in proteins[]
@@ -96,7 +121,7 @@ def anm_calc_modes(pdb_id, n_modes=20, zeros=False, turbo=True):  # in tutorial,
 
 
 def anm_extend_model(pdb_id, norm=False):
-    """
+    '''
     Extend existing, coarse grained model built for nodes to atoms.
     This method takes part of the normal modes for each node (Ca atoms)
     and extends it to other atoms in the same residue.
@@ -106,7 +131,7 @@ def anm_extend_model(pdb_id, norm=False):
     :param pdb_id: The four-letter accession code of the desired PDB file
     :type pdb_id: str
     :param norm: If norm is True, extended modes are normalized.
-    """
+    '''
     pdb_id = pdb_id.lower()
 
     # TODO: Check if needed objects exist in proteins[]
@@ -123,20 +148,114 @@ def anm_extend_model(pdb_id, norm=False):
     saveModel(proteins[pdb_id + '_anm_ext'], pdb_id + '_ext')
 
 
+def gnm_calc_modes(pdb_id, selection='calpha', n_modes=20, cutoff=10.0, gamma=1.0, **kwargs):
+    pdb_id = pdb_id.lower()
+
+    protein = proteins[pdb_id]
+    protein_ca = proteins[pdb_id].ca
+
+    protein_gnm = GNM(pdb_id)
+    sele = proteins[pdb_id].select(selection)
+
+    protein_gnm.buildKirchhoff(sele, cutoff, gamma)
+
+    protein_gnm.getKirchhoff()
+    protein_gnm.getCutoff()
+    protein_gnm.getGamma()
+
+    protein_gnm.calcModes(n_modes, zeros=False, turbo=True)
+
+    protein_gnm.getEigvals().round(3)
+    protein_gnm.getEigvecs().round(3)
+
+    slowest_mode = protein_gnm[0]
+    slowest_mode.getEigvals().round(3)
+    slowest_mode.getEigvecs().round(3)
+
+    protein_gnm.getCovariance().round(2)
+
+    hinges = calcHinges(protein_gnm)
+    # hinges = calcHinges(protein_gnm[0])
+
+    proteins[pdb_id + '_gnm'] = protein_gnm
+    '''These numbers correspond to node indices in the GNM object, which does not know anything about the original atoms. 
+    In order to get the residue numbers corresponding to these hinges, 
+    we can index the resum array with the hinges list as follows:'''
+
+    resnums = sele.getResnums()
+
+    mode2_hinges = calcHinges(protein_gnm[1])
+
+    print('Hinge residue numbers: ', resnums[mode2_hinges])
+
+    # Contact Map
+    showContactMap(protein_gnm)
+    plt.show()
+
+    # Cross-correlations
+    showCrossCorr(protein_gnm)
+    plt.show()
+
+    # Slow mode shape
+    showMode(protein_gnm[0], hinges=True, zero=True)
+    grid()
+    plt.show()
+
+    # Square fluctuations
+    showSqFlucts(protein_gnm[0], hinges=True)
+    plt.show()
+
+    # Protein structure bipartition
+    showProtein(sele, mode=protein_gnm[0])
+    plt.show()
+
+    # save GNM modes to the file
+    writeNMD(pdb_id + '_gnm.nmd', proteins[pdb_id + '_gnm'], sele)
+
+    # save atoms
+    saveAtoms(protein, pdb_id)
+
+    # save Model
+    saveModel(protein_gnm, pdb_id + '_ca')
+
+    # writeNMD(pdb_id + '_gnm.nmd', proteins[pdb_id + '_gnm'], proteins[pdb_id].ca)
+
+    # EXTEND GNM MODEL
+    # TODO: Make one method for extending using different modes
+
+    bb_gnm, bb_atoms = extendModel(protein_gnm, sele, protein.select('backbone'))
+    print('Backbone GNM: ', bb_gnm.numModes(), bb_gnm.numAtoms())
+    print('Backbone atoms: ', bb_atoms.numAtoms())
+
+    proteins[pdb_id + '_gnm_ext'] = bb_gnm
+    proteins[pdb_id + '_all'] = bb_atoms
+
+    # save extended model
+    saveModel(proteins[pdb_id + '_gnm_ext'], pdb_id + '_ext')
+
+    writeNMD(pdb_id + '_gnm_ext.nmd', bb_gnm[:3], bb_atoms)
+
+
 def sample_conformations(pdb_id, n_confs=1000, rmsd=1.0):
-    """
+    '''
     Sample conformations from along ANM modes.
 
     :param pdb_id: The four-letter accession code of the desired PDB file
     :param n_confs: Number of conformations to generate
     :param rmsd: average RMSD that the conformations will have with respect to the initial conformation (default: 1.0 Å)
     :return: Ensemble of randomly sampled conformations for the protein's ANM model.
-    """
+    '''
     pdb_id = pdb_id.lower()
 
     # TODO: Check if needed objects exist in proteins[]
-    modes = proteins[pdb_id + '_anm_ext']
-    atoms = proteins[pdb_id].protein
+    try:
+        modes = proteins[pdb_id + '_anm_ext']
+        atoms = proteins[pdb_id].protein
+
+    except:
+        print('ANM modes not found! Trying GNM...')
+        modes = proteins[pdb_id + '_gnm_ext']
+        atoms = proteins[pdb_id + '_all']
 
     returned_ens = sampleModes(modes, atoms, n_confs, rmsd)
 
@@ -174,7 +293,7 @@ def make_namd_conf(pdb_id, timestep=1.0, cutoff=10.0, temperature=0, n_steps=20)
     # Check if file exists
     if os.path.isfile(os.path.join(dir_path, 'min.conf')):
         while True:
-            val = input("min.conf already exists! Do you want to overwrite it? [Y]/n")
+            val = input('min.conf already exists! Do you want to overwrite it? [Y]/n')
             if val.lower() == 'y' or val.lower() == '':
                 break
             elif val.lower() == 'n':
@@ -216,7 +335,7 @@ ${pdb_id} writepdb {pdb_id}.pdb
 exit'''
     with open('remove_waters.tcl', 'w') as inp:
         inp.write(tcl_cmd)
-    os.system("vmd -dispdev text -e remove_waters.tcl")
+    os.system('vmd -dispdev text -e remove_waters.tcl')
 
 
 def generate_psf(pdb_id, top='top_all27_prot_lipid_na.inp'):
@@ -235,7 +354,7 @@ exit'''
     with open('where_is_charmmpar.tcl', 'w') as inp:
         inp.write(tcl_cmd)
 
-    os.system("vmd -dispdev text -e where_is_charmmpar.tcl")
+    os.system('vmd -dispdev text -e where_is_charmmpar.tcl')
 
     inp = open('charmmdir.txt', 'r')
     lines = inp.readlines()
@@ -261,7 +380,15 @@ exit'''
     with open('generate_psf.tcl', 'w') as inp:
         inp.write(tcl_cmd)
 
-    os.system("vmd -dispdev text -e generate_psf.tcl")
+    os.system('vmd -dispdev text -e generate_psf.tcl > psf.log')
+    log_file = open('psf.log', 'r')
+    log = log_file.read()
+
+    if log.find('ERROR:') != -1:
+        print('Error while generating psf! \n'
+              'Check vmd for more info...')
+        sys.exit()
+
     return 0
 
 
@@ -273,16 +400,16 @@ def optimize_conformations(pdb_id, n_cpu=3, charmm_dir=''):
     # CONFIG
     #  requires: NAMD2 or NAMD3
     if prody.utilities.which('namd3'):
-        print("Using NAMD3")
+        print('Using NAMD3')
         namd = prody.utilities.which('namd3')
         namd_ver = 'namd3'
     elif prody.utilities.which('namd2'):
-        print("Using NAMD2")
+        print('Using NAMD2')
         namd = prody.utilities.which('namd2')
         namd_ver = 'namd2'
     else:
-        print("Couldn't find NAMD2 or NAMD3. Please install before continuing. If it's on your system, make sure  to "
-              "add it to PATH")
+        print('Couldn\'t find NAMD2 or NAMD3. Please install before continuing. If it\'s on your system, make sure  to '
+              'add it to PATH')
         return None
 
     inp = open('charmmdir.txt', 'r')
@@ -296,7 +423,7 @@ def optimize_conformations(pdb_id, n_cpu=3, charmm_dir=''):
     # Create directory
     new_dir_path = os.path.join(dir_path, pdb_id.lower() + '_optimize')
     if not os.path.exists(new_dir_path):  # if needed - create directory for the optimized ensemble
-        print("Making folder for optimization files...")
+        print('Making folder for optimization files...')
         os.mkdir(new_dir_path)
 
     shutil.copyfile(pdb_id + '.psf', pdb_id + '_optimize/' + pdb_id + '.psf')
@@ -308,7 +435,7 @@ def optimize_conformations(pdb_id, n_cpu=3, charmm_dir=''):
     import glob
     conf = open('min.conf').read()
 
-    print("Writing NAMD configuration file for each conformation based on min.conf...")
+    print('Writing NAMD configuration file for each conformation based on min.conf...')
     for pdb in glob.glob(os.path.join(pdb_id + '_ensemble', '*.pdb')):
         fn = os.path.splitext(os.path.split(pdb)[1])[0]
         pdb = os.path.join('..', pdb)
@@ -316,7 +443,7 @@ def optimize_conformations(pdb_id, n_cpu=3, charmm_dir=''):
         out.write(conf.format(out=fn, pdb=pdb, par=par))
         out.close()
 
-    print("Creating folder for optimized data")
+    print('Creating folder for optimized data')
     # Optimize conformations
     os.chdir(pdb_id + '_optimize')
 
@@ -328,15 +455,19 @@ def optimize_conformations(pdb_id, n_cpu=3, charmm_dir=''):
     from multiprocessing import Pool
     pool = Pool(n_cpu)  # number of CPUs to use
 
-    print(f"Using {n_cpu} CPUs")
-    print("Running NAMD")
+    print(f'Using {n_cpu} CPUs')
+    print('Running NAMD')
     signals = pool.map(os.system, cmds)
 
     if set(signals) == {0}:
-        print("NAMD executed correctly")
+        print('NAMD executed correctly')
 
     # go back to previous dir
     os.chdir('..')
+
+
+# TODO: parse_coor
+# def parse_coor(pdb_id):
 
 
 # TODO: Work on analysis
@@ -440,31 +571,39 @@ def analyze_traj(pdb_id):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')  # TODO: Write description
     parser.add_argument('filename', type=str, help='name of PDB file')
+    parser.add_argument('enm', choices=['anm', 'gnm'], help='Elastic Network Model')
     args = parser.parse_args()
     filename = args.filename.lower()
+    network_model = args.enm.lower()
 
     load_pdb(filename)
-
     # show_protein(filename)
 
-    anm_calc_modes(filename, 3)  # def: 20
+    if network_model == 'anm':
+        anm_calc_modes(filename, 3)  # def: 20
+    elif network_model == 'gnm':
+        gnm_calc_modes(filename, 'calpha', 3)
 
     # showSqFlucts(proteins[filename.lower()+'_anm'])  # (also visible in VMD)
     # plt.show()
     # viewNMDinVMD(filename.lower()+'_anm.nmd')
 
-    anm_extend_model(filename)
-    ens = sample_conformations(filename, 100)
+    if network_model == 'anm':
+        anm_extend_model(filename)
 
+    ens = sample_conformations(filename, 100)
     print(ens.numAtoms())
     # Begin Analysis
-    # rmsd = ens.getRMSDs()
-    # hist(rmsd, density=False)
-    # xlabel('RMSD')
-    # plt.show()
+    rmsd = ens.getRMSDs()
+    hist(rmsd, density=False)
+    xlabel('RMSD')
+    plt.show()
     #
-    # showProjection(ens, proteins[filename.lower()+'_anm_ext'][:3], rmsd=True)
-    # plt.show()
+    if network_model == 'anm':
+        showProjection(ens, proteins[filename.lower() + '_anm_ext'][:3], rmsd=True)
+    else:
+        showProjection(ens, proteins[filename.lower() + '_gnm_ext'][:3], rmsd=True)
+    plt.show()
 
     # (proteins[filename.lower()].numAtoms())
     # print(ens.numAtoms())
@@ -472,7 +611,7 @@ if __name__ == '__main__':
     # End Analysis
     load_pdb(filename)
     write_conformations(filename, ens)
-    # os.system("vmd -m 1p38_ensemble/*pdb")
+    # os.system('vmd -m 1p38_ensemble/*pdb')
 
     make_namd_conf(filename)
     optimize_conformations(filename)
