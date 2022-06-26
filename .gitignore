@@ -1,6 +1,3 @@
 # Ignore SublimeText files
-*.sublime-project
-*.sublime-workspace
-
-# To-do list
-*.todo
+.sublime-project
+.sublime-workspace
