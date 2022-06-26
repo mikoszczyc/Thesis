@@ -1,0 +1,361 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+		]
+	},
+	"buffers":
+	[
+		{
+			"file": "/home/mackay/Pobrane/Stylish-2k/Stylish/theme.txt",
+			"settings":
+			{
+				"buffer_size": 912,
+				"line_ending": "Unix"
+			}
+		}
+	],
+	"build_system": "",
+	"build_system_choices":
+	[
+	],
+	"build_varint": "",
+	"command_palette":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+			[
+				"wrap",
+				"Word Wrap: Toggle"
+			],
+			[
+				"package",
+				"Package Control: Remove Package"
+			],
+			[
+				"unin",
+				"SublimeCodeIntel: Disable Live Autocompletion"
+			],
+			[
+				"color",
+				"UI: Select Color Scheme"
+			],
+			[
+				"install",
+				"Package Control: Install Package"
+			],
+			[
+				"settings",
+				"Preferences: Settings"
+			],
+			[
+				"bui",
+				"Build: New Build System"
+			],
+			[
+				"packlage",
+				"Package Control: Install Package"
+			],
+			[
+				"projec",
+				"Project: Save As"
+			],
+			[
+				"proje",
+				"Project: Save As"
+			],
+			[
+				"compare",
+				"Compare selections"
+			],
+			[
+				"packa",
+				"Package Control: Install Package"
+			],
+			[
+				"diff",
+				"Diffy Compare"
+			],
+			[
+				"pac",
+				"Package Control: Install Package"
+			]
+		],
+		"width": 0.0
+	},
+	"console":
+	{
+		"height": 154.0,
+		"history":
+		[
+		]
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"expanded_folders":
+	[
+		"/home/mackay/PycharmProjects/Thesis",
+		"/home/mackay/PycharmProjects/Thesis/PDFs",
+		"/home/mackay/PycharmProjects/Thesis/scripts"
+	],
+	"file_history":
+	[
+		"/home/mackay/Pobrane/Stylish-2k/Stylish/theme.txt",
+		"/home/mackay/.cache/.fr-BhGAwW/enm_analysis_files/ognm_kirchhoff.txt",
+		"/home/mackay/Dokumenty/Testowanie_skryptow/1p38_gnm.nmd",
+		"/home/mackay/Dokumenty/Testowanie_skryptow/1p38_anm.nmd",
+		"/home/mackay/PycharmProjects/Thesis/scripts/prody_scripts.py",
+		"/home/mackay/Dokumenty/Testowanie_skryptow/1p38_gnm_ext.nmd",
+		"/home/mackay/Dokumenty/Testowanie_skryptow/psf.log",
+		"/home/mackay/psf.log",
+		"/home/mackay/Dokumenty/Testowanie_skryptow/1p38.pdb",
+		"/home/mackay/PycharmProjects/Thesis/scripts/rosetta.py",
+		"/home/mackay/PycharmProjects/Thesis/main.py",
+		"/home/mackay/PycharmProjects/Thesis/venv/lib/python3.8/site-packages/pip/_vendor/resolvelib/providers.py",
+		"/home/mackay/PycharmProjects/Thesis/venv/lib/python3.8/site-packages/pip/_vendor/requests/models.py",
+		"/home/mackay/PycharmProjects/Thesis/venv/lib/python3.8/site-packages/numpy/typing/tests/data/reveal/modules.pyi",
+		"/home/mackay/Dokumenty/OpenGL/bio_szkielet_03_lin/lodepng.h",
+		"/home/mackay/Pobrane/conformational_sampling_files/min.conf",
+		"/home/mackay/Dokumenty/Testowanie_skryptow/1p38_optimize/1p38_1.pdb",
+		"/home/mackay/Dokumenty/Testowanie_skryptow/1p38_optimize/1p38_1.coor",
+		"/home/mackay/Pobrane/CPU-X-v4.3.1-x86_64.AppImage",
+		"/home/mackay/Pobrane/OpenRGB_0.7_x86_64_6128731.AppImage",
+		"/home/mackay/Dokumenty/Testowanie_skryptow/1p38_ensemble/1p38_1.pdb",
+		"/home/mackay/Dokumenty/Testowanie_skryptow/1p38_optimize/1p38.psf",
+		"/home/mackay/Dokumenty/Testowanie_skryptow/1p38.psf",
+		"/home/mackay/Pobrane/conformational_sampling_files/p38.psf",
+		"/home/mackay/NAMD2/psfgen",
+		"/home/mackay/Pobrane/sample.conf",
+		"/home/mackay/Dokumenty/Testowanie skryptow/1P38.pdb",
+		"/home/mackay/Dokumenty/Testowanie skryptow/5tj3.pdb",
+		"/home/mackay/Dokumenty/Testowanie skryptow/1p38.pdb",
+		"/home/mackay/Dokumenty/Testowanie skryptow/1p38_optimize/1p38.psf",
+		"/home/mackay/Dokumenty/Testowanie skryptow/1p38_ensemble/1p38_1.pdb",
+		"/home/mackay/Dokumenty/Testowanie skryptow/1mba.pdb",
+		"/home/mackay/Dokumenty/Testowanie skryptow/1mba_ensemble/1mba_1.pdb",
+		"/home/mackay/Dokumenty/Testowanie skryptow/7z0p_ensemble/7z0p_1.pdb",
+		"/home/mackay/Dokumenty/Testowanie skryptow/1p38.psf",
+		"/home/mackay/Pobrane/conformational_sampling_files/p38.pdb",
+		"/home/mackay/Dokumenty/Testowanie skryptow/1p38_ensemble/1p38_19.pdb",
+		"/home/mackay/Dokumenty/Testowanie skryptow/1p38_optimize/1p38_1.conf",
+		"/home/mackay/Dokumenty/Testowanie skryptow/min.conf",
+		"/home/mackay/Dokumenty/Testowanie skryptow/1p38_optimize/1p38_86.conf",
+		"/home/mackay/Dokumenty/Testowanie skryptow/p38.pdb",
+		"/home/mackay/PycharmProjects/Thesis/conformational_sampling_files/p38.pdb",
+		"/home/mackay/PycharmProjects/Thesis/conformational_sampling_files/p38.psf",
+		"/home/mackay/Dokumenty/Testowanie skryptow/1p38_all.dcd",
+		"/home/mackay/Dokumenty/Testowanie skryptow/1p38_optimize/1p38.pdb",
+		"/home/mackay/Dokumenty/Testowanie skryptow/remove_waters.tcl",
+		"/home/mackay/Dokumenty/Testowanie skryptow/generate_psf.tcl",
+		"/home/mackay/Pobrane/autopsf.py",
+		"/home/mackay/PycharmProjects/Thesis/conformational_sampling_files/min.conf",
+		"/home/mackay/NAMD3/namd3"
+	],
+	"find":
+	{
+		"height": 26.0
+	},
+	"find_in_files":
+	{
+		"height": 113.0,
+		"where_history":
+		[
+			""
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": false,
+		"find_history":
+		[
+			"auto",
+			"TeapotInternal",
+			"normals",
+			"glEnableVertexAttribArray",
+			"Teapot",
+			"teapot",
+			"ATOM     20  CA  ARG A   5      24.179   4.807  21.907  1.00  0.00      U    C",
+			"ATOM      1  N   GLU A   4      28.492   3.212  23.465  1.00  0.00      U    N",
+			"ATOM",
+			"HOH",
+			"ATOM",
+			"HOH",
+			"ATOM"
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": false,
+		"replace_history":
+		[
+		],
+		"reverse": false,
+		"scrollbar_highlights": true,
+		"show_context": true,
+		"use_buffer2": true,
+		"use_gitignore": true,
+		"whole_word": false,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"sheets":
+			[
+				{
+					"buffer": 0,
+					"file": "/home/mackay/Pobrane/Stylish-2k/Stylish/theme.txt",
+					"selected": true,
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 912,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								0,
+								0
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Text/Plain text.tmLanguage",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 0,
+					"stack_multiselect": false,
+					"type": "text"
+				}
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 26.0
+	},
+	"input":
+	{
+		"height": 0.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"output.SublimeLinter":
+	{
+		"height": 0.0
+	},
+	"output.find_results":
+	{
+		"height": 0.0
+	},
+	"pinned_build_system": "",
+	"project": "Thesis.sublime-project",
+	"replace":
+	{
+		"height": 48.0
+	},
+	"save_all_on_build": true,
+	"select_file":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+			[
+				"prody",
+				"venv/lib/python3.8/site-packages/numpy/typing/tests/data/reveal/modules.pyi"
+			],
+			[
+				"scrip",
+				"scripts/prody_scripts.py"
+			],
+			[
+				"",
+				"main.py"
+			]
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 500.0,
+		"last_filter": "",
+		"selected_items":
+		[
+			[
+				"",
+				"~/Dokumenty/Pisanie pracy/pisanie_pracy.sublime-project"
+			]
+		],
+		"width": 380.0
+	},
+	"select_symbol":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"selected_group": 0,
+	"settings":
+	{
+		"last_automatic_layout":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			]
+		]
+	},
+	"show_minimap": true,
+	"show_open_files": false,
+	"show_tabs": true,
+	"side_bar_visible": false,
+	"side_bar_width": 276.0,
+	"status_bar_visible": true,
+	"template_settings":
+	{
+	}
+}
