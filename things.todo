@@ -1,0 +1,25 @@
+TODO: Sprawdzanie czy wymagane paczki są dostępne
+
+TODO: Generowanie zbioru pytraj
+
+TODO: Sprawdzanie jakości generowanych zbiorów
+TODO: Wizualizacja
+TODO: Dokumentacja
+
+# Prody Notes
+
+    # TODO: Trajectory Analysis
+    http://prody.csb.pitt.edu/tutorials/trajectory_analysis/trajectory.html
+    # calcRMSF
+
+
+    # MEASUREMENT TOOLS
+    http://prody.csb.pitt.edu/manual/reference/measure/index.html#measure
+
+
+# TODO: Custom Gamma Functions
+    http://prody.csb.pitt.edu/tutorials/enm_analysis/gamma.html
+
+    # TODO:
+    http://prody.csb.pitt.edu/tutorials/enm_analysis/normalmodes.html
+    http://prody.csb.pitt.edu/tutorials/enm_analysis/deformation.html
