@@ -3,6 +3,7 @@
 
 import argparse
 import glob
+import os
 
 from prody import *
 from pylab import *
@@ -107,6 +108,7 @@ def calc_modes(pdb_id, sele='calpha', enm='anm', n_modes=20, zeros=False, turbo=
 
     model.calcModes(n_modes, zeros, turbo)  # Calculate the normal modes (n_modes is the number of modes to calculate)
     saveModel(model)  # Save the normal modes to a file (in .npz format)
+    proteins[pdb_id + '_' + enm] = model  # Save the normal modes to the dictionary of proteins.
 
     if enm == 'gnm':
         # Contact map
@@ -163,7 +165,7 @@ def extend_model(pdb_id, sele='calpha', enm='anm', n_modes=20, zeros=False, turb
     protein = proteins[pdb_id]
 
     model, selection = calc_modes(pdb_id, sele=sele, enm=enm, n_modes=n_modes, zeros=zeros, turbo=turbo, cutoff=cutoff,
-                                  gamma=gamma) # Calculate the normal modes
+                                  gamma=gamma)  # Calculate the normal modes
 
     # Extrapolate to a larger set of atoms
     bb_model, bb_atoms = extendModel(model, selection, protein.select('backbone'))  # Extend the normal modes to backbone atoms.
@@ -199,14 +201,14 @@ def sample_conformations(pdb_id, n_confs=1000, rmsd=1.0):
     if pdb_id + '_anm' not in proteins:
         raise ValueError('The ANM modes of the protein must be calculated first.')
     else:
-        model = proteins[pdb_id + '_anm']
+        model = proteins[pdb_id + '_anm_ext']
         selection = proteins[pdb_id + '_all']
 
     # Sample conformations from the normal modes. (The sampled conformations are saved to a file.)
     returned_ens = sampleModes(model, selection, n_confs=n_confs, rmsd=rmsd) # Sample conformations from the normal modes.
 
-    saveEnsemble(returned_ens) # Save the sampled conformations to a file. (in .npz format)
-    writeDCD(pdb_id + '_all.dcd', returned_ens) # Write the sampled conformations to a file. (in .dcd format)
+    saveEnsemble(returned_ens)  # Save the sampled conformations to a file. (in .npz format)
+    writeDCD(pdb_id + '_all.dcd', returned_ens)  # Write the sampled conformations to a file. (in .dcd format)
 
     return returned_ens  # Return the ensemble of sampled conformations. (ProDy object)
 
@@ -606,12 +608,12 @@ if __name__ == '__main__':
     calc_modes(filename, enm=network_model, n_modes=3)  # calculate the modes.
     # show_modes(filename, n_modes=3)  # TODO: show the modes.
     # show_modes_3d(filename, n_modes=3)  # TODO: show the modes in 3D.
-    extend_model(filename, sele='calpha', enm=network_model) # extend the model.
+    extend_model(filename, sele='calpha', enm=network_model)  # extend the model.
     # show_extended_model(filename, sele='calpha')  # TODO: show the extended model.
 
     # showSqFlucts(proteins[filename.lower()+'_anm'])  # (also visible in VMD)
     # plt.show()
-    viewNMDinVMD(filename.lower() + '_' + network_model + '.nmd')
+    # viewNMDinVMD(filename.lower() + '_' + network_model + '.nmd')
     ens = sample_conformations(filename, 100)  # create ensemble.
 
     # # Begin Analysis
