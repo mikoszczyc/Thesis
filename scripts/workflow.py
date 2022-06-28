@@ -4,6 +4,8 @@
 import argparse
 import glob
 import os
+
+import matplotlib.pyplot as plt
 import numpy as np
 
 from prody import *
@@ -121,26 +123,41 @@ def calc_modes(pdb_id, sele='calpha', enm='anm', n_modes=20, zeros=False, turbo=
         # Contact map
         print('Calculating contact map...' + pdb_id)
         showContactMap(model)  # Show the contact map.
+        title = 'Contact map for ' + pdb_id + " sele = " + sele
+        plt.title(title)  # Set title of the plot.
+        plt.savefig(pdb_id + '_' + enm + '_contact_map.png')  # Save the contact map to a file.
         plt.show()
 
         # Cross-correlations between modes
         print('Calculating cross-correlations...' + pdb_id)
         showCrossCorr(model)  # Show the cross-correlations.
+        title = 'Cross-correlations for ' + pdb_id + " sele = " + sele
+        plt.title(title)  # Set title of the plot.
+        plt.savefig(pdb_id + '_' + enm + '_cross_corr.png')  # Save the cross-correlations to a file.
         plt.show()
 
         # Slow mode shape plot
         print('Calculating slow mode shape plot...' + pdb_id)
         showMode(model[0], hinges=True, zero=True)  # Show the slow mode shape.
+        title = 'Slow mode shape for ' + pdb_id + " sele = " + sele
+        plt.title(title)  # Set title of the plot.
+        plt.savefig(pdb_id + '_' + enm + '_slow_mode_shape.png')  # Save the slow mode shape to a file.
         plt.show()
 
         # Square fluctuations of slow mode
         print('Calculating square fluctuations...' + pdb_id)
         showSqFlucts(model[0], hinges=True)  # Show the square fluctuations of the slow mode shape.
+        title = 'Square fluctuations for ' + pdb_id + " sele = " + sele
+        plt.title(title)  # Set title of the plot.
+        plt.savefig(pdb_id + '_' + enm + '_sq_flucts.png')  # Save the square fluctuations to a file.
         plt.show()
 
         # Protein structure bipartition
         print('Calculating protein structure bipartition...' + pdb_id)
-        showProtein(selection, mode=model[0]) # Show the protein structure bipartition.
+        showProtein(selection, mode=model[0])  # Show the protein structure bipartition.
+        title = 'Protein structure bipartition for ' + pdb_id + " sele = " + sele
+        plt.title(title)  # Set title of the plot.
+        plt.savefig(pdb_id + '_' + enm + '_bipartition.png')  # Save the protein structure bipartition to a file.
         plt.show()
 
     # Write NMD file
@@ -170,24 +187,32 @@ def extend_model(pdb_id, sele='calpha', enm='anm', n_modes=20, zeros=False, turb
     :type cutoff: float
     :param gamma: Spring constant. Default: 1.0.
     :type gamma: float
-    :return: model, selection (model is the extended normal modes, selection is the selection of atoms used for calculating the modes) (both are ProDy objects) (see ProDy documentation for more information - http://prody.csb.cs.nyu.edu/prody/doku.php?id=normal_modes)
+    :return: model, selection (model is the extended normal modes, selection is the selection of atoms used for calculating the modes) (both are ProDy objects)
     """
     pdb_id = pdb_id.lower()
     load_pdb(pdb_id)
 
     protein = proteins[pdb_id]
-
-    print('Calculating normal modes...' + pdb_id)
-    model, selection = calc_modes(pdb_id, sele=sele, enm=enm, n_modes=n_modes, zeros=zeros, turbo=turbo, cutoff=cutoff,
-                                  gamma=gamma)  # Calculate the normal modes
+    if pdb_id + '_' + enm not in proteins:
+        print('Calculating normal modes...' + pdb_id)
+        model, selection = calc_modes(pdb_id, sele=sele, enm=enm, n_modes=n_modes, zeros=zeros, turbo=turbo, cutoff=cutoff,
+                                      gamma=gamma)  # Calculate the normal modes
+    else:
+        model = proteins[pdb_id + '_' + enm]
+        selection = protein.select(sele)
 
     # Extrapolate to a larger set of atoms
     print('Extrapolating normal modes...' + pdb_id)
-    bb_model, bb_atoms = extendModel(model, selection, protein.select('backbone'))  # Extend the normal modes to backbone atoms.
-    saveModel(bb_model)  # Save the extended normal modes to a file (in .npz format)
+    bb_model, bb_atoms = extendModel(model, selection, protein)  # Extend the normal modes
 
     proteins[pdb_id + '_' + enm + '_ext'] = bb_model  # Save the extended normal modes to the dictionary of proteins.
     proteins[pdb_id + '_all'] = bb_atoms  # Save the extended normal modes to the dictionary of proteins.
+
+    saveModel(bb_model)  # Save the extended normal modes to a file (in .npz format)
+    saveAtoms(protein)
+
+    print(proteins[pdb_id + '_' + enm + '_ext'])
+    print(proteins[pdb_id + '_all'])
 
     print('Writing NMD file...' + pdb_id)
     writeNMD(pdb_id + '_' + enm + '_ext.nmd', bb_model, bb_atoms)  # Write the extended NMD file.
@@ -219,11 +244,10 @@ def sample_conformations(pdb_id, n_confs=1000, rmsd=1.0):
         raise ValueError('The ANM modes of the protein must be calculated first.')
     else:
         model = proteins[pdb_id + '_anm_ext']
-        selection = proteins[pdb_id + '_all']
-
+        atoms = proteins[pdb_id].protein
     # Sample conformations from the normal modes. (The sampled conformations are saved to a file.)
     print('Sampling conformations...' + pdb_id)
-    returned_ens = sampleModes(model, selection, n_confs=n_confs, rmsd=rmsd)  # Sample conformations from the normal modes.
+    returned_ens = sampleModes(model, atoms=atoms, n_confs=n_confs, rmsd=rmsd)  # Sample conformations from the normal modes.
     print('Sampled {} conformations.'.format(len(returned_ens)))  # Print the number of sampled conformations.
 
     saveEnsemble(returned_ens)  # Save the sampled conformations to a file. (in .npz format)
@@ -251,9 +275,10 @@ def write_conformations(pdb_id, ensembl):
     if pdb_id not in proteins:
         raise ValueError('The protein must be loaded first.')
 
-    protein = proteins[pdb_id]  # Get the protein object.
+    # protein = proteins[pdb_id]  # Get the protein object.
 
-    protein.addCoordset(ensemble.getCoordsets())  # Add the sampled conformations to the protein object.
+    protein = loadAtoms(pdb_id + '.ag.npz')  # Load the atoms of the protein.
+    protein.addCoordset(ensembl.getCoordsets())  # Add the sampled conformations to the protein object.
 
     # set beta values of Ca atoms to 1 and other to 0:
     protein.all.setBetas(0)  # set beta values of all atoms to 0
@@ -355,6 +380,7 @@ exit'''  # create tcl command to remove waters from the PDB file. (using atomsel
     proteins[pdb_id] = protein  # add the protein to the proteins dictionary.
     print('Removed waters from the PDB file.')  # print the name of the file that was written. (for debugging)
     print('The protein object has been updated.')
+
 
 def generate_psf(pdb_id, top='top_all27_prot_lipid_na.inp'):
     """
@@ -515,6 +541,12 @@ def optimize_conformations(pdb_id, n_cpu=3, charmm_dir=''):
     return 0  # return 0 if no error while optimizing the conformations.
 
 
+
+
+
+
+
+
 # TODO: Work on analysis
 def analyze(pdb_id):
     """
@@ -632,7 +664,7 @@ if __name__ == '__main__':
     extend_model(filename, sele='calpha', enm=network_model)  # extend the model.
     # show_extended_model(filename, sele='calpha')  # TODO: show the extended model.
 
-    if input('Do you want to view the model in VMD? ([Y]/n) ') == 'y' or 'yes' or '':
+    if input('Do you want to view the model in VMD? ([y]/n) ') == 'y':
         viewNMDinVMD(filename.lower() + '_' + network_model + '.nmd')
 
     n_confs = int(input('Enter number of conformations to analyze: [Default: 1000]') or '1000')
@@ -640,17 +672,17 @@ if __name__ == '__main__':
     ens = sample_conformations(filename, n_confs=n_confs)  # create ensemble.
 
     # # Begin Analysis
-    # rmsd = ens.getRMSDs()
-    # hist(rmsd, density=False)
-    # xlabel('RMSD')
-    # plt.show()
-    # #
-    # if network_model == 'anm':
-    #     showProjection(ens, proteins[filename.lower() + '_anm_ext'][:3], rmsd=True)
-    # plt.show()
+    rmsd = ens.getRMSDs()
+    hist(rmsd, density=False)
+    xlabel('RMSD')
+    plt.show()
+    #
+    if network_model == 'anm':
+        showProjection(ens, proteins[filename.lower() + '_anm_ext'][:3], rmsd=True)
+    plt.show()
     # # End Analysis
     # load_pdb(filename)
-    # write_conformations(filename, ens)
+    write_conformations(filename, ens)
     # # os.system('vmd -m 1p38_ensemble/*pdb')
 
     if optimize:
