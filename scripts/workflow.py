@@ -119,43 +119,43 @@ def calc_modes(pdb_id, sele='calpha', enm='anm', n_modes=20, zeros=False, turbo=
     saveModel(model)  # Save the normal modes to a file (in .npz format)
     proteins[pdb_id + '_' + enm] = model  # Save the normal modes to the dictionary of proteins.
 
+    # Contact map
+    print('Calculating contact map...' + pdb_id)
+    showContactMap(model)  # Show the contact map.
+    title = 'Contact map for ' + pdb_id + ", sele = " + sele
+    plt.title(title)  # Set title of the plot.
+    plt.savefig(pdb_id + '_' + enm + '_contact_map.png')  # Save the contact map to a file.
+    plt.show()
+
+    # Cross-correlations between modes
+    print('Calculating cross-correlations...' + pdb_id)
+    showCrossCorr(model)  # Show the cross-correlations.
+    title = 'Cross-correlations for ' + pdb_id + ", sele = " + sele
+    plt.title(title)  # Set title of the plot.
+    plt.savefig(pdb_id + '_' + enm + '_cross_corr.png')  # Save the cross-correlations to a file.
+    plt.show()
+
+    # Square fluctuations of slow mode
+    print('Calculating square fluctuations...' + pdb_id)
+    showSqFlucts(model[0], hinges=True)  # Show the square fluctuations of the slow mode shape.
+    title = 'Square fluctuations for ' + pdb_id + ", sele = " + sele
+    plt.title(title)  # Set title of the plot.
+    plt.savefig(pdb_id + '_' + enm + '_sq_flucts.png')  # Save the square fluctuations to a file.
+    plt.show()
+
     if enm == 'gnm':
-        # Contact map
-        print('Calculating contact map...' + pdb_id)
-        showContactMap(model)  # Show the contact map.
-        title = 'Contact map for ' + pdb_id + " sele = " + sele
-        plt.title(title)  # Set title of the plot.
-        plt.savefig(pdb_id + '_' + enm + '_contact_map.png')  # Save the contact map to a file.
-        plt.show()
-
-        # Cross-correlations between modes
-        print('Calculating cross-correlations...' + pdb_id)
-        showCrossCorr(model)  # Show the cross-correlations.
-        title = 'Cross-correlations for ' + pdb_id + " sele = " + sele
-        plt.title(title)  # Set title of the plot.
-        plt.savefig(pdb_id + '_' + enm + '_cross_corr.png')  # Save the cross-correlations to a file.
-        plt.show()
-
         # Slow mode shape plot
         print('Calculating slow mode shape plot...' + pdb_id)
         showMode(model[0], hinges=True, zero=True)  # Show the slow mode shape.
-        title = 'Slow mode shape for ' + pdb_id + " sele = " + sele
+        title = 'Slow mode shape for ' + pdb_id + ", sele = " + sele
         plt.title(title)  # Set title of the plot.
         plt.savefig(pdb_id + '_' + enm + '_slow_mode_shape.png')  # Save the slow mode shape to a file.
-        plt.show()
-
-        # Square fluctuations of slow mode
-        print('Calculating square fluctuations...' + pdb_id)
-        showSqFlucts(model[0], hinges=True)  # Show the square fluctuations of the slow mode shape.
-        title = 'Square fluctuations for ' + pdb_id + " sele = " + sele
-        plt.title(title)  # Set title of the plot.
-        plt.savefig(pdb_id + '_' + enm + '_sq_flucts.png')  # Save the square fluctuations to a file.
         plt.show()
 
         # Protein structure bipartition
         print('Calculating protein structure bipartition...' + pdb_id)
         showProtein(selection, mode=model[0])  # Show the protein structure bipartition.
-        title = 'Protein structure bipartition for ' + pdb_id + " sele = " + sele
+        title = 'Protein structure bipartition for ' + pdb_id + ", sele = " + sele
         plt.title(title)  # Set title of the plot.
         plt.savefig(pdb_id + '_' + enm + '_bipartition.png')  # Save the protein structure bipartition to a file.
         plt.show()
@@ -207,6 +207,12 @@ def extend_model(pdb_id, sele='calpha', enm='anm', n_modes=20, zeros=False, turb
 
     proteins[pdb_id + '_' + enm + '_ext'] = bb_model  # Save the extended normal modes to the dictionary of proteins.
     proteins[pdb_id + '_all'] = bb_atoms  # Save the extended normal modes to the dictionary of proteins.
+
+    showSqFlucts(bb_model)
+    plt.ylim(0, 3)
+    plt.title("Square fluctuations for extended " + pdb_id + ", sele = " + sele)
+    plt.savefig(pdb_id + '_' + enm + '_ext_sq_flucts.png')  # Save the square fluctuations to a file.
+    plt.show()
 
     saveModel(bb_model)  # Save the extended normal modes to a file (in .npz format)
     saveAtoms(protein)
