@@ -86,9 +86,9 @@ def calc_modes(pdb_id, sele='calpha', enm='anm', n_modes=20, zeros=False, turbo=
     :type zeros: bool
     :param turbo: Use a memory intensive, but faster way to calculate modes. Default: True.
     :type turbo: bool
-    :param cutoff: Cutoff distance for calculations. Default: 10.0 (Angstrom).
+    :param cutoff: Cutoff distance for calculations. Default: 10.0Å (Angstrom).
     :type cutoff: float
-    :param gamma: Spring constant. Default: 1.0 (kJ/mol/A^2).
+    :param gamma: Spring constant. Default: 1.0.
     :type gamma: float
     :return: model, selection (model is the normal modes, selection is the selection of atoms used for calculating the modes) (both are ProDy objects)
     """
@@ -166,9 +166,9 @@ def extend_model(pdb_id, sele='calpha', enm='anm', n_modes=20, zeros=False, turb
     :type zeros: bool
     :param turbo: Use a memory intensive, but faster way to calculate modes. Default: True.
     :type turbo: bool
-    :param cutoff: Cutoff distance for calculations. Default: 10.0 (Angstrom).
+    :param cutoff: Cutoff distance for calculations. Default: 10.0Å (Angstrom).
     :type cutoff: float
-    :param gamma: Spring constant. Default: 1.0 (kJ/mol/A^2).
+    :param gamma: Spring constant. Default: 1.0.
     :type gamma: float
     :return: model, selection (model is the extended normal modes, selection is the selection of atoms used for calculating the modes) (both are ProDy objects) (see ProDy documentation for more information - http://prody.csb.cs.nyu.edu/prody/doku.php?id=normal_modes)
     """
@@ -277,7 +277,7 @@ def make_namd_conf(pdb_id, timestep=1.0, cutoff=10.0, temperature=0, n_steps=20)
 
     :param pdb_id: The four-letter accession code of the PDB file.
     :type pdb_id: string
-    :param timestep: Timestep for the simulation. Default: 1.0 fs. (1 fs = 1 ps = 1e-15 s)
+    :param timestep: Timestep for the simulation. Default: 1.0 fs (femtoseconds).
     :type timestep: float
     :param cutoff: Cutoff distance for the LJ interactions. Default: 10.0 Å.
     :type cutoff: float
