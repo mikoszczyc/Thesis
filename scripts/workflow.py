@@ -661,39 +661,51 @@ def analyze_pytraj(pdb_id):
 
 # Example workflow:
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='')  # TODO: Write description
-    parser.add_argument('filename', type=str, help='name of PDB file')
-    parser.add_argument('enm', choices=['anm', 'gnm'], help='Elastic Network Model')
+    parser = argparse.ArgumentParser(description='Example workflow for generating the protein conformational ensemble.')
+    parser.add_argument('filename', type=str, help='name of PDB file (PDB-ID)')
+    parser.add_argument('enm', choices=['anm', 'gnm'], help='Elastic Network Model. Default: ANM', default='anm')
     parser.add_argument('--optimize', action='store_true', help='optimize the protein')
     parser.add_argument('--analyze_traj', action='store_true', help='analyze the protein')
 
     args = parser.parse_args()  # parse the arguments.
+
+    filename = args.filename.lower()  # convert the filename to lower case. (for consistency)
+
+    network_model = args.enm.lower()  # convert the network model to lower case. (for consistency)
+    if filename == '' or network_model == '':
+        config = vars(args)
+        print(config)
+        exit()
+
     filename = args.filename.lower()  # convert the filename to lower case. (for consistency)
     network_model = args.enm.lower()  # convert the network model to lower case. (for consistency)
     optimize = args.optimize  # get the optimize flag.
     analyze_traj = args.analyze_traj  # get the analyze_traj flag.
 
+
     load_pdb(filename)  # load the PDB file. (this is the main function) (for testing)
     show_protein(filename)  # show the protein.
 
-    calc_modes(filename, enm=network_model, n_modes=3)  # calculate the modes.
+    n_modes = int(input('Enter the number of modes to use: [Default: 3]') or '3')
+    calc_modes(filename, enm=network_model, n_modes=n_modes)  # calculate the modes.
 
-    extend_model(filename, sele='calpha', enm=network_model)  # extend the model.
+    sele = str(input('Enter the selection to use: [Default: calpha]') or 'calpha')
+    extend_model(filename, sele=sele, enm=network_model)  # extend the model.
 
     if input('Do you want to view the model in VMD? ([y]/n) ') == 'y':
         viewNMDinVMD(filename.lower() + '_' + network_model + '.nmd')
 
-    n_confs = int(input('Enter number of conformations to analyze: [Default: 1000]') or '1000')
-    rmsd = float(input('Enter RMSD threshold: [Default: 1.0] ') or '1.0')
-    ens = sample_conformations(filename, n_confs=n_confs)  # create ensemble.
+    if network_model == 'anm':
+        n_confs = int(input('Enter number of conformations to analyze: [Default: 1000]') or '1000')
+        rmsd = float(input('Enter RMSD threshold: [Default: 1.0] ') or '1.0')
+        ens = sample_conformations(filename, n_confs=n_confs)  # create ensemble.
 
-    write_conformations(filename, ens)
+        write_conformations(filename, ens)
 
     if optimize:
         make_namd_conf(filename)
         optimize_conformations(filename)  # optimize the protein.
-
-    print(analyze_conformations(filename))  # analyze the protein.
+        print(analyze_conformations(filename))  # analyze the protein.
 
     if analyze_traj:
         analyze_pytraj(filename)  # analyze the protein.
