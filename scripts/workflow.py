@@ -698,7 +698,7 @@ if __name__ == '__main__':
     if network_model == 'anm':
         n_confs = int(input('Enter number of conformations to analyze: [Default: 1000]') or '1000')
         rmsd = float(input('Enter RMSD threshold: [Default: 1.0] ') or '1.0')
-        ens = sample_conformations(filename, n_confs=n_confs)  # create ensemble.
+        ens = sample_conformations(filename, n_confs=n_confs, rmsd=rmsd)  # create ensemble.
 
         write_conformations(filename, ens)
 
