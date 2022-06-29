@@ -116,7 +116,7 @@ def calc_modes(pdb_id, sele='calpha', enm='anm', n_modes=20, zeros=False, turbo=
     print('Calculating modes...' + pdb_id)
     model.calcModes(n_modes, zeros, turbo)  # Calculate the normal modes (n_modes is the number of modes to calculate)
     print('Saving modes...' + pdb_id)
-    saveModel(model)  # Save the normal modes to a file (in .npz format)
+    saveModel(model, pdb_id + '_' + sele)  # Save the normal modes to a file (in .npz format)
     proteins[pdb_id + '_' + enm] = model  # Save the normal modes to the dictionary of proteins.
 
     # Contact map
@@ -214,7 +214,7 @@ def extend_model(pdb_id, sele='calpha', enm='anm', n_modes=20, zeros=False, turb
     plt.savefig(pdb_id + '_' + enm + '_ext_sq_flucts.png')  # Save the square fluctuations to a file.
     plt.show()
 
-    saveModel(bb_model)  # Save the extended normal modes to a file (in .npz format)
+    saveModel(bb_model, pdb_id + '_' + enm + '_ext')  # Save the extended normal modes to a file (in .npz format)
     saveAtoms(protein)
 
     print(proteins[pdb_id + '_' + enm + '_ext'])
@@ -256,8 +256,8 @@ def sample_conformations(pdb_id, n_confs=1000, rmsd=1.0):
     returned_ens = sampleModes(model, atoms=atoms, n_confs=n_confs, rmsd=rmsd)  # Sample conformations from the normal modes.
     print('Sampled {} conformations.'.format(len(returned_ens)))  # Print the number of sampled conformations.
 
-    saveEnsemble(returned_ens)  # Save the sampled conformations to a file. (in .npz format)
-    print('Saved the sampled conformations to a file. (in .npz format)')
+    # saveEnsemble(returned_ens)  # Save the sampled conformations to a file. (in .npz format)
+    # print('Saved the sampled conformations to a file. (in .npz format)')
     writeDCD(pdb_id + '_all.dcd', returned_ens)  # Write the trajectory to a file. (in .dcd format)
     print('Saved the trajectories to a file. (in .dcd format)')
 
@@ -331,7 +331,7 @@ def make_namd_conf(pdb_id, timestep=1.0, cutoff=10.0, temperature=0, n_steps=20)
 
     # Create min.conf file
     conf_file = open('min.conf', 'w')
-    conf_file.write(f'''coordinates\t{{pdb}}
+    conf_file.write(f'''coordinates\t../{{pdb}}
 structure       {pdb_id}.psf
 paraTypeCharmm  on
 parameters      {{par}}
@@ -347,8 +347,8 @@ exclude         scaled1-4
 temperature     {temperature}
 seed            12345
 constraints     on
-consref         {{pdb}}
-conskfile       {{pdb}}
+consref         ../{{pdb}}
+conskfile       ../{{pdb}}
 conskcol        B
 constraintScaling  1.0
 minimize        {n_steps}
@@ -542,24 +542,19 @@ def optimize_conformations(pdb_id, n_cpu=3, charmm_dir=''):
     else:  # if not all the commands executed successfully. (NAMD)
         print('NAMD did not execute correctly!')  # print message. (for debugging)
 
-    os.chdir('')  # go back to previous directory.
+    os.chdir('..')  # go back to previous directory.
 
     return 0  # return 0 if no error while optimizing the conformations.
 
 
-
-
-
-
-
-
-# TODO: Work on analysis
-def analyze(pdb_id):
+def analyze_conformations(pdb_id, threshold=1.2):
     """
-    Analyze the ensemble.
+    Analyze the ensemble. Select conformations with RMSD change above the threshold.
 
     :param pdb_id: The four-letter accession code of the PDB file.
     :type pdb_id: string
+    :param threshold: The threshold for the RMSD. Default: 1.2 Å(Angstrom)
+    :type threshold: float
     :return: None (the ensemble is analyzed).
     """
 
@@ -605,12 +600,31 @@ def analyze(pdb_id):
     xlabel('Conformation index')
     ylabel('RMSD')
     legend(loc='upper left')  # show the legend.
+    plt.savefig(pdb_id + '_rmsd_change.png')  # save the figure.
     plt.show()  # show the plot.
 
-    return 0  # return 0 if no error while analyzing the protein.
+    rmsd_mean = []
+
+    for i in range(refined.numCoordsets()):
+        refined.setACSIndex(i)
+        alignCoordsets(refined)
+        rmsd = calcRMSD(refined)
+        rmsd_mean.append(rmsd.sum() / (len(rmsd) - 1))
+
+    bar(arange(1, len(rmsd_mean) + 1), rmsd_mean)  # plot the RMSD between the initial and refined structure. (all atoms)
+    xlabel('Conformation index')
+    ylabel('Mean RMSD')
+    plt.savefig(pdb_id + '_rmsd_mean_to_all.png')  # save the figure.
+    plt.show()  # show the plot.
+
+    selected = (array(rmsd_mean) >= threshold).nonzero()[0]  # get the indices of the conformations with RMSD change above the threshold.
+
+    selection = refined[selected]  # get the selected conformations.
+
+    return selection  # return the selected conformations.
 
 
-def analyze_traj(pdb_id):
+def analyze_pytraj(pdb_id):
     """
     Analyze the ensemble. Trajectory version. Using pyTraj.
     :param pdb_id: The four-letter accession code of the PDB file.
@@ -651,24 +665,20 @@ if __name__ == '__main__':
     parser.add_argument('filename', type=str, help='name of PDB file')
     parser.add_argument('enm', choices=['anm', 'gnm'], help='Elastic Network Model')
     parser.add_argument('--optimize', action='store_true', help='optimize the protein')
-    parser.add_argument('--analyze', action='store_true', help='analyze the protein')
     parser.add_argument('--analyze_traj', action='store_true', help='analyze the protein')
 
     args = parser.parse_args()  # parse the arguments.
     filename = args.filename.lower()  # convert the filename to lower case. (for consistency)
     network_model = args.enm.lower()  # convert the network model to lower case. (for consistency)
     optimize = args.optimize  # get the optimize flag.
-    analyze = args.analyze  # get the analyze flag.
     analyze_traj = args.analyze_traj  # get the analyze_traj flag.
 
     load_pdb(filename)  # load the PDB file. (this is the main function) (for testing)
     show_protein(filename)  # show the protein.
 
     calc_modes(filename, enm=network_model, n_modes=3)  # calculate the modes.
-    # show_modes(filename, n_modes=3)  # TODO: show the modes.
-    # show_modes_3d(filename, n_modes=3)  # TODO: show the modes in 3D.
+
     extend_model(filename, sele='calpha', enm=network_model)  # extend the model.
-    # show_extended_model(filename, sele='calpha')  # TODO: show the extended model.
 
     if input('Do you want to view the model in VMD? ([y]/n) ') == 'y':
         viewNMDinVMD(filename.lower() + '_' + network_model + '.nmd')
@@ -677,28 +687,15 @@ if __name__ == '__main__':
     rmsd = float(input('Enter RMSD threshold: [Default: 1.0] ') or '1.0')
     ens = sample_conformations(filename, n_confs=n_confs)  # create ensemble.
 
-    # # Begin Analysis
-    rmsd = ens.getRMSDs()
-    hist(rmsd, density=False)
-    xlabel('RMSD')
-    plt.show()
-    #
-    if network_model == 'anm':
-        showProjection(ens, proteins[filename.lower() + '_anm_ext'][:3], rmsd=True)
-    plt.show()
-    # # End Analysis
-    # load_pdb(filename)
     write_conformations(filename, ens)
-    # # os.system('vmd -m 1p38_ensemble/*pdb')
 
     if optimize:
         make_namd_conf(filename)
         optimize_conformations(filename)  # optimize the protein.
 
-    if analyze:
-        analyze(filename)  # analyze the protein.
+    print(analyze_conformations(filename))  # analyze the protein.
 
     if analyze_traj:
-        analyze_traj(filename)  # analyze the protein.
+        analyze_pytraj(filename)  # analyze the protein.
 
 # ##########################################################################
