@@ -4,6 +4,7 @@
 import argparse
 import glob
 import os
+import shutil
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -617,11 +618,11 @@ def analyze_conformations(pdb_id, threshold=1.2):
     plt.savefig(pdb_id + '_rmsd_mean_to_all.png')  # save the figure.
     plt.show()  # show the plot.
 
-    selected = (array(rmsd_mean) >= threshold).nonzero()[0]  # get the indices of the conformations with RMSD change above the threshold.
+    indices = (array(rmsd_mean) >= threshold).nonzero()[0]  # get the indices of the conformations with RMSD change above the threshold.
 
-    selection = refined[selected]  # get the selected conformations.
+    selection = refined[indices]  # get the selected conformations.
 
-    return selection  # return the selected conformations.
+    return selection, indices  # return the selected conformations.
 
 
 def analyze_pytraj(pdb_id):
@@ -659,6 +660,31 @@ def analyze_pytraj(pdb_id):
 
     # TODO: Psi angle
 
+
+def ensemble_from_selection(pdb_id, indices, optimized=True):
+    print('Indices: '+str(str(indices).split()))
+    indices
+    if optimized:
+        if os.path.exists(pdb_id+'_optimize/'):
+            new_dir_path = os.path.join(dir_path, pdb_id.lower() + '_selected')
+            os.makedirs(new_dir_path)
+            for i in indices:
+                shutil.copyfile(pdb_id+'_optimize/'+pdb_id+'_'+str(i+1)+'.coor', pdb_id+'_selected/'+pdb_id+'_'+str(i+1)+'.coor')
+                shutil.copyfile(pdb_id+'_optimize/'+pdb_id+'_'+str(i+1)+'.conf', pdb_id+'_selected/'+pdb_id+'_'+str(i+1)+'.conf')
+                shutil.copyfile(pdb_id+'_optimize/'+pdb_id+'_'+str(i+1)+'.vel', pdb_id+'_selected/'+pdb_id+'_'+str(i+1)+'.vel')
+                shutil.copyfile(pdb_id+'_optimize/'+pdb_id+'_'+str(i+1)+'.log', pdb_id+'_selected/'+pdb_id+'_'+str(i+1)+'.log')
+                shutil.copyfile(pdb_id+'_optimize/'+pdb_id+'_'+str(i+1)+'.xsc', pdb_id+'_selected/'+pdb_id+'_'+str(i+1)+'.xsc')
+            pass
+        else:
+            print('Could not find optimized ensemble.')
+
+    elif os.path.exists(pdb_id + '_ensemble'):
+        pass
+    else:
+        print('Could not find the ensemble.')
+        return
+
+
 # Example workflow:
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Example workflow for generating the protein conformational ensemble.')
@@ -682,7 +708,6 @@ if __name__ == '__main__':
     optimize = args.optimize  # get the optimize flag.
     analyze_traj = args.analyze_traj  # get the analyze_traj flag.
 
-
     load_pdb(filename)  # load the PDB file. (this is the main function) (for testing)
     show_protein(filename)  # show the protein.
 
@@ -705,7 +730,8 @@ if __name__ == '__main__':
     if optimize:
         make_namd_conf(filename)
         optimize_conformations(filename)  # optimize the protein.
-        print(analyze_conformations(filename))  # analyze the protein.
+        selection, selected_indices = (analyze_conformations(filename))  # analyze the protein.
+        ensemble_from_selection(filename, selected_indices)
 
     if analyze_traj:
         analyze_pytraj(filename)  # analyze the protein.
