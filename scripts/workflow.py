@@ -11,7 +11,7 @@ import numpy as np
 
 from prody import *
 from pylab import *
-
+import pytraj as pt
 
 proteins = {}
 dir_path = os.getcwd()
@@ -35,10 +35,12 @@ def load_pdb(pdb_id):
         generate_psf(filename)  # Generate PSF file. If the PSF file already exists, do nothing.
         protein = parsePDB(pdb_id)  # Parse PDB file. If the PDB file is not available, raise an error.
 
-        print('ATOMS: ', protein.numAtoms())  # print number of atoms in protein. This is useful for debugging. If the number is wrong, the PDB file is probably corrupted.
-        proteins[pdb_id] = protein.protein  # Save the protein to the dictionary of proteins. This is useful for later use. The protein is a ProDy object.
-        print('PROTEIN ATOMS: ', proteins[pdb_id].numAtoms())  # print number of atoms in protein. This is useful for debugging. This is the same as the number of atoms in the PDB file.
-
+        print('ATOMS: ',
+              protein.numAtoms())  # print number of atoms in protein. This is useful for debugging. If the number is wrong, the PDB file is probably corrupted.
+        proteins[
+            pdb_id] = protein.protein  # Save the protein to the dictionary of proteins. This is useful for later use. The protein is a ProDy object.
+        print('PROTEIN ATOMS: ', proteins[
+            pdb_id].numAtoms())  # print number of atoms in protein. This is useful for debugging. This is the same as the number of atoms in the PDB file.
 
     # TODO: LOADING FILES
     # Load all types of files that exist (ag, _anm, _ca.anm, _ext.nma)
@@ -196,7 +198,8 @@ def extend_model(pdb_id, sele='calpha', enm='anm', n_modes=20, zeros=False, turb
     protein = proteins[pdb_id]
     if pdb_id + '_' + enm not in proteins:
         print('Calculating normal modes...' + pdb_id)
-        model, selection = calc_modes(pdb_id, sele=sele, enm=enm, n_modes=n_modes, zeros=zeros, turbo=turbo, cutoff=cutoff,
+        model, selection = calc_modes(pdb_id, sele=sele, enm=enm, n_modes=n_modes, zeros=zeros, turbo=turbo,
+                                      cutoff=cutoff,
                                       gamma=gamma)  # Calculate the normal modes
     else:
         model = proteins[pdb_id + '_' + enm]
@@ -224,7 +227,7 @@ def extend_model(pdb_id, sele='calpha', enm='anm', n_modes=20, zeros=False, turb
     print('Writing NMD file...' + pdb_id)
     writeNMD(pdb_id + '_' + enm + '_ext.nmd', bb_model, bb_atoms)  # Write the extended NMD file.
 
-    return bb_model, bb_atoms   # Return the extended normal modes and the selection of atoms used for calculating the modes.
+    return bb_model, bb_atoms  # Return the extended normal modes and the selection of atoms used for calculating the modes.
 
 
 def sample_conformations(pdb_id, n_confs=1000, rmsd=1.0):
@@ -254,7 +257,8 @@ def sample_conformations(pdb_id, n_confs=1000, rmsd=1.0):
         atoms = proteins[pdb_id].protein
     # Sample conformations from the normal modes. (The sampled conformations are saved to a file.)
     print('Sampling conformations...' + pdb_id)
-    returned_ens = sampleModes(model, atoms=atoms, n_confs=n_confs, rmsd=rmsd)  # Sample conformations from the normal modes.
+    returned_ens = sampleModes(model, atoms=atoms, n_confs=n_confs,
+                               rmsd=rmsd)  # Sample conformations from the normal modes.
     print('Sampled {} conformations.'.format(len(returned_ens)))  # Print the number of sampled conformations.
 
     # saveEnsemble(returned_ens)  # Save the sampled conformations to a file. (in .npz format)
@@ -369,7 +373,7 @@ def remove_waters(pdb_id):
     :return: None (the waters are removed from the protein object and the waters are removed from the PDB file).
     """
 
-    pdb_id = pdb_id.lower()   # convert to lowercase
+    pdb_id = pdb_id.lower()  # convert to lowercase
 
     tcl_cmd = f'''mol load pdb {pdb_id}.pdb
 set {pdb_id} [atomselect top protein]
@@ -380,7 +384,8 @@ exit'''  # create tcl command to remove waters from the PDB file. (using atomsel
         inp.write(tcl_cmd)  # write the tcl command to a file.
 
     print('Removing waters from the PDB file.')
-    os.system('vmd -dispdev text -e remove_waters.tcl > remove_waters.log')  # run vmd with the tcl command. (remove waters)
+    os.system(
+        'vmd -dispdev text -e remove_waters.tcl > remove_waters.log')  # run vmd with the tcl command. (remove waters)
 
     # Load the PDB file without the waters.
     protein = parsePDB(os.path.join(dir_path, pdb_id + '.pdb'))  # load the PDB file without the waters. (ProDy object)
@@ -416,7 +421,8 @@ exit'''
         inp.write(tcl_cmd)  # write the tcl command to a file.
 
     print('Running where_is_charmmpar.tcl to locate CHARMMPAR and CHARMMTOP files...')
-    os.system('vmd -dispdev text -e where_is_charmmpar.tcl > where_is_charmmpar.log') # run vmd with the tcl command. (find location of CHARMMPAR file)
+    os.system(
+        'vmd -dispdev text -e where_is_charmmpar.tcl > where_is_charmmpar.log')  # run vmd with the tcl command. (find location of CHARMMPAR file)
 
     # Read the location of CHARMMPAR file.
     inp = open('charmmdir.txt', 'r')
@@ -507,7 +513,8 @@ def optimize_conformations(pdb_id, n_cpu=3, charmm_dir=''):
         shutil.rmtree(new_dir_path)
         os.mkdir(new_dir_path)
 
-    shutil.copyfile(pdb_id + '.psf', pdb_id + '_optimize/' + pdb_id + '.psf')  # copy the PSF file to the new directory. (for NAMD)
+    shutil.copyfile(pdb_id + '.psf',
+                    pdb_id + '_optimize/' + pdb_id + '.psf')  # copy the PSF file to the new directory. (for NAMD)
 
     # Create NAMD configuration file for each conformation based on min.conf file.
     import glob
@@ -515,9 +522,11 @@ def optimize_conformations(pdb_id, n_cpu=3, charmm_dir=''):
 
     print('Writing NAMD configuration file for each conformation based on min.conf...')
     for pdb in glob.glob(os.path.join(pdb_id + '_ensemble', '*.pdb')):  # for each conformation
-        fn = os.path.splitext(os.path.split(pdb)[1])[0]  # get the filename without the extension (the conformation number)
+        fn = os.path.splitext(os.path.split(pdb)[1])[
+            0]  # get the filename without the extension (the conformation number)
         pdb = os.path.join('', pdb)
-        out = open(os.path.join(pdb_id + '_optimize', fn + '.conf'), 'w')  # create a new configuration file for the conformation.
+        out = open(os.path.join(pdb_id + '_optimize', fn + '.conf'),
+                   'w')  # create a new configuration file for the conformation.
         print('Writing NAMD configuration file for conformation ' + fn + '...')
         out.write(conf.format(out=fn, pdb=pdb, par=par))  # write the configuration file.
         out.close()
@@ -566,7 +575,8 @@ def analyze_conformations(pdb_id, threshold=1.2):
     print('Parsing ensembles...')
     for pdb in glob.glob(pdb_id + '_ensemble/*pdb'):  # for each conformation in the ensemble (pdb file)
         # print(pdb)
-        fn = os.path.splitext(os.path.split(pdb)[1])[0]  # get the filename without the extension (the conformation number)
+        fn = os.path.splitext(os.path.split(pdb)[1])[
+            0]  # get the filename without the extension (the conformation number)
         print(fn)  # print the conformation number. (for debugging)
 
         # rename .coor files to .pdb
@@ -584,7 +594,7 @@ def analyze_conformations(pdb_id, threshold=1.2):
 
     print('Calculating RMSD...')  # calculate the RMSD between the initial and refined structure.
     rmsd_ca = []  # list to store the RMSD between the initial and refined structure. (for CA)
-    rmsd_all = []   # list to store the RMSD between the initial and refined structure. (for all atoms)
+    rmsd_all = []  # list to store the RMSD between the initial and refined structure. (for all atoms)
     initial_ca = initial.ca  # get the CA atoms of the initial structure.
     refined_ca = refined.ca  # get the CA atoms of the refined structure.
     for i in range(initial.numCoordsets()):  # for each conformation in the ensemble
@@ -592,8 +602,10 @@ def analyze_conformations(pdb_id, threshold=1.2):
         refined.setACSIndex(i)  # set the conformation number.
         initial_ca.setACSIndex(i)
         refined_ca.setACSIndex(i)
-        rmsd_ca.append(calcRMSD(initial_ca, refined_ca))  # append the RMSD between the initial and refined structure to the list. (carbon alpha)
-        rmsd_all.append(calcRMSD(initial, refined))  # append the RMSD between the initial and refined structure to the list. (all atoms)
+        rmsd_ca.append(calcRMSD(initial_ca,
+                                refined_ca))  # append the RMSD between the initial and refined structure to the list. (carbon alpha)
+        rmsd_all.append(calcRMSD(initial,
+                                 refined))  # append the RMSD between the initial and refined structure to the list. (all atoms)
 
     print('RMSD between the initial and refined structure:')
     plot(rmsd_all, label='all')  # plot the RMSD between the initial and refined structure. (all atoms)
@@ -612,7 +624,8 @@ def analyze_conformations(pdb_id, threshold=1.2):
         rmsd = calcRMSD(refined)
         rmsd_mean.append(rmsd.sum() / (len(rmsd) - 1))
 
-    bar(arange(1, len(rmsd_mean) + 1), rmsd_mean)  # plot the RMSD between the initial and refined structure. (all atoms)
+    bar(arange(1, len(rmsd_mean) + 1),
+        rmsd_mean)  # plot the RMSD between the initial and refined structure. (all atoms)
     xlabel('Conformation index')
     ylabel('Mean RMSD')
     plt.savefig(pdb_id + '_rmsd_mean_to_all.png')  # save the figure.
@@ -636,44 +649,124 @@ def analyze_pytraj(pdb_id):
     pdb_id = pdb_id.lower()  # convert the pdb_id to lower case.
     print('Parsing ensembles...')
 
-    structure = parsePDB(pdb_id)  # parse the PDB file.
-    traj = Trajectory(pdb_id + '_all.dcd')  # create a Trajectory object for the trajectory. (all atoms)
+    print('Calculating RMSF...')  # calculate the RMSF between the initial and refined structure.
+    traj = pt.load(pdb_id + '_all.dcd', top=pdb_id + '.psf')
+    pt.superpose(traj, ref=0)
+    rmsf_data = pt.rmsf(traj)
 
-    # Link trajectory to atoms
-    traj.link(structure)  # link the trajectory to the structure.
-    traj.setCoords(structure)  # set the coordinates of the trajectory to the structure.
+    plt.plot(rmsf_data.T[0], rmsf_data.T[1])
+    plt.xlabel('atom')
+    plt.ylabel('RMSF (Angstrom)')
+    plt.savefig(pdb_id + '_rmsf.png')
+    plt.show()
 
-    ensemble = parseDCD(pdb_id + '_all.dcd')
-    ensemble.setAtoms(structure)
-    ensemble.setCoords(structure)
+    print('RMSD - Radius of gyration correlation...')  # calculate the RMSD - Radius of gyration correlation.
+    analyze_rmsd_ragdyr_corr(traj)
 
-    ensemble.superpose()  # superpose the ensemble on the initial structure.
-    # ensemble.write(pdb_id + '_all_superposed.pdb') # write the superposed ensemble to a PDB file.
+    print('Analyzing H-bonds...')  # calculate the H-bond distances between the initial and refined structure.
+    print('Between which residue numbers do you want to search for the H-bonds?')
+    a = input('First residue:')
+    b = input('Last residue:')
+    print(analyze_hbonds(traj, a, b))
 
-    rmsd = ensemble.getRMSDs()  # get the RMSD of the ensemble.
-    print(f'RMSD: {rmsd[:10]}')  # print the RMSD of the ensemble. (first 10 conformations)
+    # print('Analyzing DSSP profile...')
+    # simple_dssp = input('Do you want to use simplified DSSP profile? (y/n)') or 'y'
+    # if simple_dssp == 'y' or simple_dssp == 'yes':
+    #     resi, ss, _ = analyze_dssp(pdb_id, simplified=True)
+    # else:
+    #     resi, ss, _ = analyze_dssp(pdb_id, simplified=False)
+    #
+    # print(ss[0].tolist())
 
-    rmsf = ensemble.getRMSFs()  # get the RMSF of the ensemble.
-    print(f'RMSF: {rmsf}')
 
-    # TODO: Radius of gyration
 
-    # TODO: Psi angle
+def analyze_hbonds(traj, a, b):
+    """
+    Analyze the protein for hydrogen bonds. Returns donor_acceptor pairs.
+    :param traj: The trajectory.
+    :type traj: pytraj.Trajectory
+    :param a: The first residue number.
+    :type a: int
+    :param b: The last residue number.
+    :type b: int
+    :return: The donor_acceptor pairs.
+    """
 
+    if a > b:
+        a, b = b, a
+    if a == '' or b == '':
+        h = pt.search_hbonds(traj)
+    else:
+        h = pt.search_hbonds(traj, f':{a},{b}')
+
+    return h.donor_acceptor
+
+def analyze_rmsd_ragdyr_corr(traj):
+    import seaborn as sns
+    rmsd_data = pt.rmsd(traj, ref=0, mask='@C,N,O')  # use only backbone atoms
+    rg_data = pt.radgyr(traj)
+    print("rmsd_data:", rmsd_data)
+    print("")
+    print("rg_data:", rg_data)
+
+    sns.jointplot(rmsd_data, rg_data)
+    xlabel('RMSD')
+    ylabel('Radius of gyration')
+    plt.savefig("rmsd_ragdyr_corr.png")
+    plt.show()
+
+
+# def analyze_ramachandran():
+#     pass
+
+# def analyze_dssp(traj, simplified=True):
+#     """
+#     Return DSSP profile for trajectory.
+#     Simplified codes:
+#     - 'H': include 'H', 'G', 'I' (helix)
+#     - 'E': include 'E', 'B' (strand)
+#     - 'C': include 'T', 'S' or '0' (coil)
+#
+#     For more details, see: https://amber-md.github.io/pytraj/latest/analysis.html#pytraj.dssp
+#
+#     :param traj: trajectory
+#     :type traj: pytraj.Trajectory
+#     :param simplified: whether to use simplified codes
+#     :type simplified: bool
+#     :return: DSSP profile
+#     """
+#     residues, ss, _ = pt.dssp(traj, simplified=simplified)
+#     return residues, ss, _
 
 def ensemble_from_selection(pdb_id, indices, optimized=True):
-    print('Indices: '+str(str(indices).split()))
+    """
+    Create an ensemble from the selected conformations.
+    :param pdb_id: The four-letter accession code of the PDB file.
+    :type pdb_id: string
+    :param indices: The indices of the selected conformations.
+    :type indices: list
+    :param optimized: Whether to use the optimized ensemble.
+    :type optimized: bool
+    :return: The ensemble is copied into a new folder.
+    """
+    print('Indices: ' + str(str(indices).split()))
     indices
     if optimized:
-        if os.path.exists(pdb_id+'_optimize/'):
+        if os.path.exists(pdb_id + '_optimize/'):
             new_dir_path = os.path.join(dir_path, pdb_id.lower() + '_selected')
-            os.makedirs(new_dir_path)
+            if not os.path.exists(new_dir_path):
+                os.makedirs(new_dir_path)
             for i in indices:
-                shutil.copyfile(pdb_id+'_optimize/'+pdb_id+'_'+str(i+1)+'.coor', pdb_id+'_selected/'+pdb_id+'_'+str(i+1)+'.coor')
-                shutil.copyfile(pdb_id+'_optimize/'+pdb_id+'_'+str(i+1)+'.conf', pdb_id+'_selected/'+pdb_id+'_'+str(i+1)+'.conf')
-                shutil.copyfile(pdb_id+'_optimize/'+pdb_id+'_'+str(i+1)+'.vel', pdb_id+'_selected/'+pdb_id+'_'+str(i+1)+'.vel')
-                shutil.copyfile(pdb_id+'_optimize/'+pdb_id+'_'+str(i+1)+'.log', pdb_id+'_selected/'+pdb_id+'_'+str(i+1)+'.log')
-                shutil.copyfile(pdb_id+'_optimize/'+pdb_id+'_'+str(i+1)+'.xsc', pdb_id+'_selected/'+pdb_id+'_'+str(i+1)+'.xsc')
+                shutil.copyfile(pdb_id + '_optimize/' + pdb_id + '_' + str(i + 1) + '.coor',
+                                pdb_id + '_selected/' + pdb_id + '_' + str(i + 1) + '.coor')
+                shutil.copyfile(pdb_id + '_optimize/' + pdb_id + '_' + str(i + 1) + '.conf',
+                                pdb_id + '_selected/' + pdb_id + '_' + str(i + 1) + '.conf')
+                shutil.copyfile(pdb_id + '_optimize/' + pdb_id + '_' + str(i + 1) + '.vel',
+                                pdb_id + '_selected/' + pdb_id + '_' + str(i + 1) + '.vel')
+                shutil.copyfile(pdb_id + '_optimize/' + pdb_id + '_' + str(i + 1) + '.log',
+                                pdb_id + '_selected/' + pdb_id + '_' + str(i + 1) + '.log')
+                shutil.copyfile(pdb_id + '_optimize/' + pdb_id + '_' + str(i + 1) + '.xsc',
+                                pdb_id + '_selected/' + pdb_id + '_' + str(i + 1) + '.xsc')
             pass
         else:
             print('Could not find optimized ensemble.')
@@ -735,5 +828,3 @@ if __name__ == '__main__':
 
     if analyze_traj:
         analyze_pytraj(filename)  # analyze the protein.
-
-# ##########################################################################
