@@ -710,8 +710,7 @@ def analyze_rmsd_ragdyr_corr(traj):
     print("rg_data:", rg_data)
 
     sns.jointplot(rmsd_data, rg_data)
-    xlabel('RMSD')
-    ylabel('Radius of gyration')
+
     plt.savefig("rmsd_ragdyr_corr.png")
     plt.show()
 
@@ -810,7 +809,7 @@ if __name__ == '__main__':
     sele = str(input('Enter the selection to use: [Default: calpha]') or 'calpha')
     extend_model(filename, sele=sele, enm=network_model)  # extend the model.
 
-    if input('Do you want to view the model in VMD? ([y]/n) ') == 'y':
+    if input('Do you want to view the model in VMD? ([y]/n) ') == ('y' or ''):
         viewNMDinVMD(filename.lower() + '_' + network_model + '.nmd')
 
     if network_model == 'anm':
