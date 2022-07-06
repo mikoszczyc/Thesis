@@ -679,7 +679,6 @@ def analyze_pytraj(pdb_id):
     # print(ss[0].tolist())
 
 
-
 def analyze_hbonds(traj, a, b):
     """
     Analyze the protein for hydrogen bonds. Returns donor_acceptor pairs.
@@ -692,14 +691,15 @@ def analyze_hbonds(traj, a, b):
     :return: The donor_acceptor pairs.
     """
 
+
+
     if a > b:
         a, b = b, a
-    if a == '' or b == '':
-        h = pt.search_hbonds(traj)
-    else:
-        h = pt.search_hbonds(traj, f':{a},{b}')
+
+    h = pt.search_hbonds(traj, f':{a},{b}')
 
     return h.donor_acceptor
+
 
 def analyze_rmsd_ragdyr_corr(traj):
     import seaborn as sns
