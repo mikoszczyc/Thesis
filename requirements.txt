@@ -1,0 +1,7 @@
+biopython==1.76
+matplotlib~=3.5.2
+numpy~=1.21.6
+prody~=2.2.0
+pytraj~=2.0.5
+scipy==1.7.3
+setuptools~=61.2.0

@@ -3,8 +3,7 @@ Development of Python library for standardized generation and evaluation/charact
 
 ## Overview
 
-## Installation
-### Dependencies
+## Dependencies
 The following packages/tools are needed:
 - numpy
 - scipy
@@ -16,5 +15,3 @@ The following packages/tools are needed:
 - PyTraj: https://amber-md.github.io/pytraj/latest/index.html
 ## Documentation
 
-## Paper (in progress)
-https://www.overleaf.com/read/syvkbjmpckpm

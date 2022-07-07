@@ -32,7 +32,8 @@ def load_pdb(pdb_id):
         fetchPDB(pdb_id)  # Fetch PDB file from PDB server. If the PDB file is not available, raise an error.
         os.system(f'gunzip {pdb_id}.pdb.gz')  # Unzip PDB file.
         remove_waters(pdb_id)  # Remove waters.
-        generate_psf(filename)  # Generate PSF file. If the PSF file already exists, do nothing.
+        if network_model == 'anm':
+            generate_psf(filename)  # Generate PSF file. If the PSF file already exists, do nothing.
         protein = parsePDB(pdb_id)  # Parse PDB file. If the PDB file is not available, raise an error.
 
         print('ATOMS: ',
@@ -122,37 +123,43 @@ def calc_modes(pdb_id, sele='calpha', enm='anm', n_modes=20, zeros=False, turbo=
     saveModel(model, pdb_id + '_' + sele)  # Save the normal modes to a file (in .npz format)
     proteins[pdb_id + '_' + enm] = model  # Save the normal modes to the dictionary of proteins.
 
-    # Contact map
-    print('Calculating contact map...' + pdb_id)
-    showContactMap(model)  # Show the contact map.
-    title = 'Contact map for ' + pdb_id + ", sele = " + sele
-    plt.title(title)  # Set title of the plot.
-    plt.savefig(pdb_id + '_' + enm + '_contact_map.png')  # Save the contact map to a file.
-    plt.show()
-
-    # Cross-correlations between modes
-    print('Calculating cross-correlations...' + pdb_id)
-    showCrossCorr(model)  # Show the cross-correlations.
-    title = 'Cross-correlations for ' + pdb_id + ", sele = " + sele
-    plt.title(title)  # Set title of the plot.
-    plt.savefig(pdb_id + '_' + enm + '_cross_corr.png')  # Save the cross-correlations to a file.
-    plt.show()
-
-    # Square fluctuations of slow mode
-    print('Calculating square fluctuations...' + pdb_id)
-    showSqFlucts(model[0], hinges=True)  # Show the square fluctuations of the slow mode shape.
-    title = 'Square fluctuations for ' + pdb_id + ", sele = " + sele
-    plt.title(title)  # Set title of the plot.
-    plt.savefig(pdb_id + '_' + enm + '_sq_flucts.png')  # Save the square fluctuations to a file.
-    plt.show()
-
     if enm == 'gnm':
+        # Contact map
+        print('Calculating contact map...' + pdb_id)
+        showContactMap(model)  # Show the contact map.
+        title = 'Contact map for ' + pdb_id + ", sele = " + sele
+        plt.title(title)  # Set title of the plot.
+        plt.savefig(pdb_id + '_' + enm + '_contact_map.svg')  # Save the contact map to a file.
+        plt.show()
+
+        # Cross-correlations between modes
+        print('Calculating cross-correlations...' + pdb_id)
+        showCrossCorr(model)  # Show the cross-correlations.
+        title = 'Cross-correlations for ' + pdb_id + ", sele = " + sele
+        plt.title(title)  # Set title of the plot.
+        plt.xlabel('Residue')
+        plt.ylabel('Residue')
+        plt.savefig(pdb_id + '_' + enm + '_cross_corr.svg')  # Save the cross-correlations to a file.
+        plt.show()
+
         # Slow mode shape plot
         print('Calculating slow mode shape plot...' + pdb_id)
         showMode(model[0], hinges=True, zero=True)  # Show the slow mode shape.
-        title = 'Slow mode shape for ' + pdb_id + ", sele = " + sele
+        title = 'Mode 1 from ' + pdb_id + ", sele = " + sele
         plt.title(title)  # Set title of the plot.
-        plt.savefig(pdb_id + '_' + enm + '_slow_mode_shape.png')  # Save the slow mode shape to a file.
+        plt.xlabel('Residue')  # Set x-axis label.
+        plt.ylabel(enm.upper()+' Mode Fluctuation')  # Set y-axis label.
+        plt.savefig(pdb_id + '_' + enm + '_slow_mode_shape.svg')  # Save the slow mode shape to a file.
+        plt.show()
+
+        # Square fluctuations of slow mode
+        print('Calculating square fluctuations...' + pdb_id)
+        showSqFlucts(model[0], hinges=True)  # Show the square fluctuations of the slow mode shape.
+        title = 'Square fluctuations for ' + pdb_id + ", sele = " + sele
+        plt.title(title)  # Set title of the plot.
+        plt.xlabel('Residue')  # Set x-axis label.
+        plt.ylabel('Square fluctuations')  # Set y-axis label.
+        plt.savefig(pdb_id + '_' + enm + '_sq_flucts.svg')  # Save the square fluctuations to a file.
         plt.show()
 
         # Protein structure bipartition
@@ -160,7 +167,17 @@ def calc_modes(pdb_id, sele='calpha', enm='anm', n_modes=20, zeros=False, turbo=
         showProtein(selection, mode=model[0])  # Show the protein structure bipartition.
         title = 'Protein structure bipartition for ' + pdb_id + ", sele = " + sele
         plt.title(title)  # Set title of the plot.
-        plt.savefig(pdb_id + '_' + enm + '_bipartition.png')  # Save the protein structure bipartition to a file.
+        plt.savefig(pdb_id + '_' + enm + '_bipartition.svg')  # Save the protein structure bipartition to a file.
+        plt.show()
+
+    if enm == 'anm':
+        print('Calculating square fluctuations...' + pdb_id)
+        showSqFlucts(model)  # Show the square fluctuations
+        title = 'ANM ' + pdb_id + ", sele = " + sele
+        plt.title(title)  # Set title of the plot.
+        plt.xlabel('Residue')  # Set x-axis label.
+        plt.ylabel('Square fluctuations')  # Set y-axis label.
+        plt.savefig(pdb_id + '_' + enm + '_sq_flucts.svg')  # Save the square fluctuations to a file.
         plt.show()
 
     # Write NMD file
@@ -213,9 +230,8 @@ def extend_model(pdb_id, sele='calpha', enm='anm', n_modes=20, zeros=False, turb
     proteins[pdb_id + '_all'] = bb_atoms  # Save the extended normal modes to the dictionary of proteins.
 
     showSqFlucts(bb_model)
-    plt.ylim(0, 3)
     plt.title("Square fluctuations for extended " + pdb_id + ", sele = " + sele)
-    plt.savefig(pdb_id + '_' + enm + '_ext_sq_flucts.png')  # Save the square fluctuations to a file.
+    plt.savefig(pdb_id + '_' + enm + '_ext_sq_flucts.svg')  # Save the square fluctuations to a file.
     plt.show()
 
     saveModel(bb_model, pdb_id + '_' + enm + '_ext')  # Save the extended normal modes to a file (in .npz format)
@@ -575,8 +591,7 @@ def analyze_conformations(pdb_id, threshold=1.2):
     print('Parsing ensembles...')
     for pdb in glob.glob(pdb_id + '_ensemble/*pdb'):  # for each conformation in the ensemble (pdb file)
         # print(pdb)
-        fn = os.path.splitext(os.path.split(pdb)[1])[
-            0]  # get the filename without the extension (the conformation number)
+        fn = os.path.splitext(os.path.split(pdb)[1])[0]  # get the filename without the extension (the conformation number)
         print(fn)  # print the conformation number. (for debugging)
 
         # rename .coor files to .pdb
@@ -602,18 +617,24 @@ def analyze_conformations(pdb_id, threshold=1.2):
         refined.setACSIndex(i)  # set the conformation number.
         initial_ca.setACSIndex(i)
         refined_ca.setACSIndex(i)
-        rmsd_ca.append(calcRMSD(initial_ca,
-                                refined_ca))  # append the RMSD between the initial and refined structure to the list. (carbon alpha)
-        rmsd_all.append(calcRMSD(initial,
-                                 refined))  # append the RMSD between the initial and refined structure to the list. (all atoms)
+
+        ca_rmsd = np.array(calcRMSD(initial_ca, refined_ca))
+        multiplied_ca_rmsd = ca_rmsd * 10
+        rmsd_ca.append(multiplied_ca_rmsd)  # append the RMSD between the initial and refined structure to the list. (carbon alpha)
+
+        all_rmsd = np.array(calcRMSD(initial, refined))
+        multiplied_all_rmsd = all_rmsd * 10
+        rmsd_all.append(multiplied_all_rmsd)  # append the RMSD between the initial and refined structure to the list. (all atoms)
 
     print('RMSD between the initial and refined structure:')
-    plot(rmsd_all, label='all')  # plot the RMSD between the initial and refined structure. (all atoms)
-    plot(rmsd_ca, label='ca')  # plot the RMSD between the initial and refined structure. (carbon alpha)
+
+    plt.plot(rmsd_all, label='all')  # plot the RMSD between the initial and refined structure. (all atoms)
+    plt.plot(rmsd_ca, label='ca')  # plot the RMSD between the initial and refined structure. (carbon alpha)
+
     xlabel('Conformation index')
-    ylabel('RMSD')
+    ylabel('RMSD (Å)')
     legend(loc='upper left')  # show the legend.
-    plt.savefig(pdb_id + '_rmsd_change.png')  # save the figure.
+    plt.savefig(pdb_id + '_rmsd_change.svg')  # save the figure.
     plt.show()  # show the plot.
 
     rmsd_mean = []
@@ -627,8 +648,8 @@ def analyze_conformations(pdb_id, threshold=1.2):
     bar(arange(1, len(rmsd_mean) + 1),
         rmsd_mean)  # plot the RMSD between the initial and refined structure. (all atoms)
     xlabel('Conformation index')
-    ylabel('Mean RMSD')
-    plt.savefig(pdb_id + '_rmsd_mean_to_all.png')  # save the figure.
+    ylabel('Mean RMSD (Å)')
+    plt.savefig(pdb_id + '_rmsd_mean_to_all.svg')  # save the figure.
     plt.show()  # show the plot.
 
     indices = (array(rmsd_mean) >= threshold).nonzero()[0]  # get the indices of the conformations with RMSD change above the threshold.
@@ -656,86 +677,31 @@ def analyze_pytraj(pdb_id):
 
     plt.plot(rmsf_data.T[0], rmsf_data.T[1])
     plt.xlabel('atom')
-    plt.ylabel('RMSF (Angstrom)')
-    plt.savefig(pdb_id + '_rmsf.png')
+    plt.ylabel('RMSF (Å)')
+    plt.savefig(pdb_id + '_rmsf.svg')
     plt.show()
 
     print('RMSD - Radius of gyration correlation...')  # calculate the RMSD - Radius of gyration correlation.
     analyze_rmsd_ragdyr_corr(traj)
 
-    print('Analyzing H-bonds...')  # calculate the H-bond distances between the initial and refined structure.
-    print('Between which residue numbers do you want to search for the H-bonds?')
-    a = input('First residue:')
-    b = input('Last residue:')
-    print(analyze_hbonds(traj, a, b))
-
-    # print('Analyzing DSSP profile...')
-    # simple_dssp = input('Do you want to use simplified DSSP profile? (y/n)') or 'y'
-    # if simple_dssp == 'y' or simple_dssp == 'yes':
-    #     resi, ss, _ = analyze_dssp(pdb_id, simplified=True)
-    # else:
-    #     resi, ss, _ = analyze_dssp(pdb_id, simplified=False)
-    #
-    # print(ss[0].tolist())
-
-
-def analyze_hbonds(traj, a, b):
-    """
-    Analyze the protein for hydrogen bonds. Returns donor_acceptor pairs.
-    :param traj: The trajectory.
-    :type traj: pytraj.Trajectory
-    :param a: The first residue number.
-    :type a: int
-    :param b: The last residue number.
-    :type b: int
-    :return: The donor_acceptor pairs.
-    """
-
-
-
-    if a > b:
-        a, b = b, a
-
-    h = pt.search_hbonds(traj, f':{a},{b}')
-
-    return h.donor_acceptor
 
 
 def analyze_rmsd_ragdyr_corr(traj):
     import seaborn as sns
     rmsd_data = pt.rmsd(traj, ref=0, mask='@C,N,O')  # use only backbone atoms
+
     rg_data = pt.radgyr(traj)
     print("rmsd_data:", rmsd_data)
     print("")
     print("rg_data:", rg_data)
 
-    sns.jointplot(rmsd_data, rg_data)
+    plot = sns.jointplot(rmsd_data, rg_data)
+    plot.set_axis_labels('RMSD (Å)', 'Radius of gyration (Å)')
+    plot.figure.tight_layout()
 
-    plt.savefig("rmsd_ragdyr_corr.png")
+    plt.savefig("rmsd_ragdyr_corr.svg")
     plt.show()
 
-
-# def analyze_ramachandran():
-#     pass
-
-# def analyze_dssp(traj, simplified=True):
-#     """
-#     Return DSSP profile for trajectory.
-#     Simplified codes:
-#     - 'H': include 'H', 'G', 'I' (helix)
-#     - 'E': include 'E', 'B' (strand)
-#     - 'C': include 'T', 'S' or '0' (coil)
-#
-#     For more details, see: https://amber-md.github.io/pytraj/latest/analysis.html#pytraj.dssp
-#
-#     :param traj: trajectory
-#     :type traj: pytraj.Trajectory
-#     :param simplified: whether to use simplified codes
-#     :type simplified: bool
-#     :return: DSSP profile
-#     """
-#     residues, ss, _ = pt.dssp(traj, simplified=simplified)
-#     return residues, ss, _
 
 def ensemble_from_selection(pdb_id, indices, optimized=True):
     """
@@ -804,9 +770,8 @@ if __name__ == '__main__':
     show_protein(filename)  # show the protein.
 
     n_modes = int(input('Enter the number of modes to use: [Default: 3]') or '3')
-    calc_modes(filename, enm=network_model, n_modes=n_modes)  # calculate the modes.
-
     sele = str(input('Enter the selection to use: [Default: calpha]') or 'calpha')
+    calc_modes(filename, sele=sele, enm=network_model, n_modes=n_modes)  # calculate the modes.
     extend_model(filename, sele=sele, enm=network_model)  # extend the model.
 
     if input('Do you want to view the model in VMD? ([y]/n) ') == ('y' or ''):
@@ -820,6 +785,8 @@ if __name__ == '__main__':
         write_conformations(filename, ens)
 
     if optimize:
+        if network_model == 'gnm':
+            raise ValueError('The GNM model cannot be optimized. Try ANM.')
         make_namd_conf(filename)
         optimize_conformations(filename)  # optimize the protein.
         selection, selected_indices = (analyze_conformations(filename))  # analyze the protein.
