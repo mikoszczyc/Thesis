@@ -4,7 +4,9 @@ channels:
   - ambermd
 dependencies:
   - python=3.7
+  - biopython
   - pytraj
+  - prody
   - pip
   - certifi
   - numpy
