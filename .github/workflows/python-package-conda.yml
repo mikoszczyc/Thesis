@@ -1,4 +1,4 @@
-name: ensemble_gen_workflow
+name: Python Package using Conda
 
 on: [push]
 
