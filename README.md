@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/467915693.svg)](https://zenodo.org/badge/latestdoi/467915693)
+
 # Thesis
 Development of Python library for standardized generation and evaluation/characterization of protein structural ensembles.
 
