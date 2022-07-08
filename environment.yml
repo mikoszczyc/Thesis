@@ -6,7 +6,7 @@ dependencies:
   - python=3.7
   - biopython
   - pytraj
-  - pip
+  - pip:
     - -r file:requirements.txt
   - certifi
   - numpy
