@@ -6,7 +6,7 @@ dependencies:
   - python=3.7
   - biopython
   - pytraj
-  - prody
+  - ProDy
   - pip
   - certifi
   - numpy
