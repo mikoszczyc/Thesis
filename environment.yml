@@ -7,8 +7,8 @@ dependencies:
   - biopython
   - pytraj
   - pip
-  - pip:
-    - -r file:requirements.txt
   - certifi
   - numpy
   - seaborn
+  - pip:
+    - -r file:requirements.txt
