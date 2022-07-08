@@ -2,13 +2,15 @@ name: Thesis
 channels:
   - defaults
   - ambermd
+  - conda-forge
 dependencies:
   - python=3.7
   - biopython
-  - pytraj
-  - prody
-  - pip
   - certifi
+  - matplotlib
   - numpy
+  - pip
+  - prody
+  - pytraj
+  - scipy
   - seaborn
-prefix: /home/mackay/miniconda3/envs/Thesis
