@@ -7,8 +7,7 @@ dependencies:
   - biopython
   - pytraj
   - pip
-    - ProDy
+    - -r file:requirements.txt
   - certifi
   - numpy
   - seaborn
-prefix: /home/mackay/miniconda3/envs/Thesis
