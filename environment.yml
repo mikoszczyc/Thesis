@@ -13,5 +13,5 @@ dependencies:
   - scipy
   - seaborn
   - pip:
-    - prody
+    - -r file:requirements.txt
     
