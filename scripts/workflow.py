@@ -464,18 +464,22 @@ exit'''
     with open('generate_psf.tcl', 'w') as inp:
         inp.write(tcl_cmd)  # write the tcl command to a file.
 
-    print('Running generate_psf.tcl to generate PSF file...')
-    os.system('vmd -dispdev text -e generate_psf.tcl > psf.log')  # run vmd with the tcl command. (generate PSF file)
-    log_file = open('psf.log', 'r')  # open the log file.
-    log = log_file.read()
+    # Check if file exists
+    if not os.path.isfile(os.path.join(dir_path, pdb_id+'.psf')):
+        print('Running generate_psf.tcl to generate PSF file...')
+        os.system('vmd -dispdev text -e generate_psf.tcl > psf.log')  # run vmd with the tcl command. (generate PSF file)
+        log_file = open('psf.log', 'r')  # open the log file.
+        log = log_file.read()
 
-    if log.find('ERROR:') != -1:
-        print('Error while generating psf! \n'
-              'Check log file for more info...')
-        sys.exit()  # exit if error while generating psf. (error message is printed in the log file)
+        if log.find('ERROR:') != -1:
+            print('Error while generating psf! \n'
+                  'Check log file for more info...')
+            sys.exit()  # exit if error while generating psf. (error message is printed in the log file)
+        else:
+            print('Generated PSF file.')
+            log_file.close()
     else:
-        print('Generated PSF file.')
-        log_file.close()
+        print("Using existing PSF file.")
 
     return 0  # return 0 if no error while generating psf.
 
@@ -688,6 +692,8 @@ def analyze_pytraj(pdb_id):
 
 def analyze_rmsd_ragdyr_corr(traj):
     import seaborn as sns
+    import warnings
+    warnings.filterwarnings('ignore', category=DeprecationWarning)
     rmsd_data = pt.rmsd(traj, ref=0, mask='@C,N,O')  # use only backbone atoms
 
     rg_data = pt.radgyr(traj)
